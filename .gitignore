@@ -1,0 +1,133 @@
+# ─────────────────────────────────────────────────────────────
+# PhishGuard-ML — Git Ignore Rules
+# ─────────────────────────────────────────────────────────────
+
+# ── Python ────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ── Virtual Environments ─────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+.env
+.ENV/
+.python-version
+
+# ── Environment & Secrets ────────────────────────────────────
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+secrets.json
+credentials.json
+
+# ── Databases & Runtime Data ─────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+phishing_detection.db
+phishing_detector.db
+instance/
+
+# ── Logs ─────────────────────────────────────────────────────
+logs/
+*.log
+logs.log
+
+# ── Session & Cache Files ────────────────────────────────────
+session_files/
+.cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml
+*.cover
+
+# ── ML Models & Large Artifacts ──────────────────────────────
+# Keep training_report.json, ignore binary model files (regenerate with train.py)
+model/*.pkl
+models/*.pkl
+model/*.joblib
+models/*.joblib
+!model/training_report.json
+!model/.gitkeep
+
+# ── Uploaded / User Data ─────────────────────────────────────
+tmp/
+uploads/
+user_uploads/
+!tmp/.gitkeep
+
+# ── Conference / Build Outputs ───────────────────────────────
+*.pptx
+!conference_assets/.gitkeep
+presentation/
+slides/
+
+# ── Browser Extension (build artifacts only) ─────────────────
+browser_extension/node_modules/
+browser_extension/dist/
+browser_extension/*.zip
+browser_extension/icons/*.png
+!browser_extension/icons/.gitkeep
+
+# ── IDE / Editor ─────────────────────────────────────────────
+.vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── OS Junk ──────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+ehthumbs.db
+ehthumbs_vista.db
+.Trashes
+.Trash-*
+.Spotlight-V100
+.fseventsd
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# ── Jupyter ──────────────────────────────────────────────────
+.ipynb_checkpoints/
+profile_default/
+ipython_config.py
+
+# ── Docker / Misc ────────────────────────────────────────────
+docker-compose.override.yml
+*.pid
+*.seed
+*.pid.lock
