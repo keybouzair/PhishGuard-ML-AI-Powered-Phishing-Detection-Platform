@@ -713,7 +713,7 @@ def admin_login():
             return redirect(url_for('admin_dashboard'))
         else:
             flash('Invalid admin credentials.', 'danger')
-    return render_template("login_v2.html", login_type='admin')
+    return render_template("admin_login.html")
 
 
 @app.route("/user_login", methods=["GET", "POST"])
@@ -733,7 +733,7 @@ def user_login():
             return redirect(url_for('user_dashboard'))
         else:
             flash('Invalid credentials.', 'danger')
-    return render_template("login_v2.html", login_type='user')
+    return render_template("user_login.html")
 
 
 @app.route("/logout")
