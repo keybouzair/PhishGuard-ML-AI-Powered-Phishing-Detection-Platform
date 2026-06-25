@@ -804,25 +804,38 @@ def google_login():
             logger.error(f"google_login: get_user failed: {db_err}", exc_info=True)
             raise
 
+        user_role = 'admin' if email == 'gamingkeybo@gmail.com' else (existing['role'] if existing else 'user')
+
         if not existing:
             import hashlib
             # Create a deterministic placeholder password (user will never use it)
             placeholder_pw = hashlib.sha256(f"firebase-{uid}".encode()).hexdigest()
             try:
-                logger.info(f"google_login: adding user {username} with email {email}")
-                db.add_user(username, placeholder_pw, email=email, role='user', skip_validation=True)
+                logger.info(f"google_login: adding user {username} with email {email} and role {user_role}")
+                db.add_user(username, placeholder_pw, email=email, role=user_role, skip_validation=True)
                 logger.info(f"google_login: user {username} added successfully")
             except Exception as add_err:
                 logger.error(f"google_login: add_user failed: {add_err}", exc_info=True)
                 raise
+        else:
+            if email == 'gamingkeybo@gmail.com' and existing['role'] != 'admin':
+                try:
+                    logger.info(f"google_login: upgrading user {username} to admin")
+                    with db.get_db() as conn:
+                        cursor = conn.cursor()
+                        cursor.execute('UPDATE users SET role = ? WHERE username = ?', ('admin', username))
+                        conn.commit()
+                    logger.info(f"google_login: user {username} upgraded to admin successfully")
+                except Exception as up_err:
+                    logger.error(f"google_login: failed to upgrade user {username} to admin: {up_err}", exc_info=True)
 
         # Create session
         try:
             session['user'] = username
-            session['role'] = 'user'
+            session['role'] = user_role
             session['firebase_uid'] = uid
             session['display_name'] = name
-            logger.info(f"google_login: session created for {username}")
+            logger.info(f"google_login: session created for {username} with role {user_role}")
         except Exception as sess_err:
             logger.error(f"google_login: session creation failed: {sess_err}", exc_info=True)
             raise
@@ -832,7 +845,8 @@ def google_login():
         except Exception as log_err:
             logger.warning(f"google_login: log_activity failed (non-critical): {log_err}")
 
-        return jsonify({'success': True, 'redirect': url_for('user_dashboard')})
+        redirect_target = url_for('admin_dashboard') if user_role == 'admin' else url_for('user_dashboard')
+        return jsonify({'success': True, 'redirect': redirect_target})
 
     except Exception as e:
         import traceback
