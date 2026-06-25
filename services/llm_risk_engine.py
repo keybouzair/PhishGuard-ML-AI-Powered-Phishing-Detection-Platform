@@ -59,10 +59,66 @@ class LLMRiskIntelligenceEngine:
 
     async def _prompt_reasoning_llm(self, score: float, ml: float, vt: int, vis: float, brand: str) -> Dict[str, str]:
         """
-        Mocks reaching out to an LLM like GPT-4 to write the human-readable summary.
+        Queries Gemini API to write a human-readable security risk summary and recommend response actions.
+        Falls back to mock heuristics if GEMINI_API_KEY is not configured.
         """
+        gemini_key = os.environ.get("GEMINI_API_KEY")
+        if gemini_key:
+            import os
+            import requests
+            try:
+                api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+                
+                prompt = (
+                    f"Correlate the following multi-modal signals for a scanned URL:\n"
+                    f"- Aggregate Risk Score: {score}\n"
+                    f"- Machine Learning Phishing Confidence: {ml}%\n"
+                    f"- ThreatIntel Engines Detections count: {vt}\n"
+                    f"- Visual Impersonation Brand Match: {brand} with {vis}% similarity\n\n"
+                    f"Write a concise, high-fidelity security summary/explanation of this threat level suitable for a SOC/SIEM platform, and recommend the best response action.\n"
+                    f"Output JSON ONLY in the following format:\n"
+                    f'{{"summary": "security summary detail", "action": "recommended action (e.g. Block & Auto-Takedown, Monitor & sandbox, Safe)"}}'
+                )
+                
+                payload = {
+                    "contents": [
+                        {
+                            "parts": [
+                                {"text": prompt}
+                            ]
+                        }
+                    ],
+                    "generationConfig": {
+                        "responseMimeType": "application/json"
+                    }
+                }
+                
+                headers = {"Content-Type": "application/json"}
+                response = requests.post(api_url, json=payload, headers=headers, timeout=15)
+                
+                if response.status_code == 200:
+                    resp_data = response.json()
+                    try:
+                        text_response = resp_data["contents"][0]["parts"][0]["text"].strip()
+                        if "```json" in text_response:
+                            text_response = text_response.split("```json")[1].split("```")[0].strip()
+                        elif "```" in text_response:
+                            text_response = text_response.split("```")[1].strip()
+                        
+                        data = json.loads(text_response)
+                        return {
+                            "summary": data.get("summary"),
+                            "action": data.get("action", "Monitor")
+                        }
+                    except Exception as parse_err:
+                        logger.error(f"Failed to parse Gemini content response: {parse_err}. Raw: {text_response}")
+                else:
+                    logger.error(f"Gemini Content API returned status {response.status_code}: {response.text}")
+            except Exception as api_err:
+                logger.error(f"Error calling Gemini Content API: {api_err}", exc_info=True)
+
+        # Fallback Mock reasoning
         await asyncio.sleep(0.3)
-        
         if score >= 90:
             summary = f"Critical phishing threat detected. The visual pipeline indicates a {vis}% match for {brand or 'a known brand'} credentials. The ML heuristic reinforces this with a {ml}% confidence, and {vt} ThreatIntel engines have flagged the domain."
             action = "Block & Auto-Takedown"

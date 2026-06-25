@@ -144,7 +144,8 @@ class VisualAnalysisService:
     async def _analyze_with_vision_llm(self, image_path: str, url: str) -> Dict[str, Any]:
         """
         Send the captured screenshot to a Vision LLM API to determine brand impersonation.
-        (Mocked implementation - replace with actual API call to GPT-4V or Gemini Pro Vision)
+        If GEMINI_API_KEY is configured, this uses Google Gemini 1.5 Flash.
+        Otherwise, falls back to mock heuristics.
         
         Args:
             image_path (str): Absolute path to the screenshot image.
@@ -153,12 +154,74 @@ class VisualAnalysisService:
         Returns:
             Dict[str, Any]: Structured detection report.
         """
-        # In a real implementation, you would:
-        # 1. Base64 encode the image
-        # 2. Add an explicit prompt like: "Analyze this screenshot. Does it look like a login page for Microsoft, Google, PayPal, or a Bank? The domain is {url}. If the domain does not match the visual brand, it is phishing."
-        # 3. Call OpenAI/Google Gemini API.
+        gemini_key = os.environ.get("GEMINI_API_KEY")
+        if gemini_key:
+            import base64
+            import requests
+            logger.info(f"Sending {image_path} to Gemini Vision API for analysis of {url}")
+            try:
+                with open(image_path, "rb") as image_file:
+                    encoded_image = base64.b64encode(image_file.read()).decode('utf-8')
+                
+                api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+                
+                prompt = (
+                    f"Analyze this screenshot of a webpage. Does it look like a login interface or landing page for a major brand "
+                    f"(e.g., Microsoft, Google, PayPal, Apple, Facebook, Amazon, Netflix, or a Bank)? "
+                    f"The actual URL / domain is: {url}. "
+                    f"If the page visual brand, layout, logo, or elements match one of those brands, but the domain does not "
+                    f"match the official legitimate domain of that brand, it is phishing. "
+                    f"Output JSON ONLY in the following format: "
+                    f'{{"brand_detected": "Brand Name or Generic Bank/Service or None", '
+                    f'"impersonation_score": 0-100, '
+                    f'"reason": "Detailed description of the visual matches and domain verification."}}'
+                )
+                
+                payload = {
+                    "contents": [
+                        {
+                            "parts": [
+                                {"text": prompt},
+                                {
+                                    "inlineData": {
+                                        "mimeType": "image/png",
+                                        "data": encoded_image
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    "generationConfig": {
+                        "responseMimeType": "application/json"
+                    }
+                }
+                
+                headers = {"Content-Type": "application/json"}
+                response = requests.post(api_url, json=payload, headers=headers, timeout=25)
+                
+                if response.status_code == 200:
+                    resp_data = response.json()
+                    try:
+                        text_response = resp_data["contents"][0]["parts"][0]["text"].strip()
+                        if "```json" in text_response:
+                            text_response = text_response.split("```json")[1].split("```")[0].strip()
+                        elif "```" in text_response:
+                            text_response = text_response.split("```")[1].strip()
+                        
+                        data = json.loads(text_response)
+                        return {
+                            "brand_detected": data.get("brand_detected"),
+                            "impersonation_score": int(data.get("impersonation_score", 0)),
+                            "reason": data.get("reason", "Analyzed using Gemini Vision API.")
+                        }
+                    except Exception as parse_err:
+                        logger.error(f"Failed to parse Gemini Vision API response: {parse_err}. Raw: {text_response}")
+                else:
+                    logger.error(f"Gemini API returned error status {response.status_code}: {response.text}")
+            except Exception as api_err:
+                logger.error(f"Error calling Gemini Vision API: {api_err}", exc_info=True)
         
-        logger.info(f"Sending {image_path} to Vision LLM for analysis of {url}")
+        logger.info(f"Using mock visual analysis fallback for {url}")
         
         # Simulating LLM response latency
         import asyncio
