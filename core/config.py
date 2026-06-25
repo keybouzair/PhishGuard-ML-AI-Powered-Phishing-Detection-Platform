@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     
     # Feature Toggles
     ENABLE_ACTIVE_DEFENSE: bool = os.getenv("ENABLE_ACTIVE_DEFENSE", "True").lower() == "true"
-    ENABLE_PHISHING_SIMULATOR: bool = os.getenv("ENABLE_PHISHING_SIMULATOR", "False").lower() == "true"
+    ENABLE_PHISHING_SIMULATOR: bool = os.getenv("ENABLE_PHISHING_SIMULATOR", "True").lower() == "true"
     
     # Thresholds
     CRITICAL_RISK_THRESHOLD: int = 90

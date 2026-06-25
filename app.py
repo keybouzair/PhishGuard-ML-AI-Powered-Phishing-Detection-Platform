@@ -22,6 +22,7 @@ from services.visual_analysis import VisualAnalysisService
 from services.llm_risk_engine import llm_risk_engine
 from services.email_parser import EmailIntelligenceService
 from services.qr_scanner import QRScannerService
+from labs.phishing_simulator import phishing_simulator
 
 
 # B-04: Security import MUST NOT fail silently — rate limiting is a safety control
@@ -1272,6 +1273,39 @@ def api_chat():
             
     response = jsonify({'reply': reply})
     return _apply_cors_headers(response), 200
+
+
+@app.route("/api/simulate", methods=["POST", "OPTIONS"])
+@csrf.exempt
+@rate_limit(max_requests=10, window_seconds=60)
+def api_simulate():
+    if request.method == "OPTIONS":
+        response = jsonify({'ok': True})
+        return _apply_cors_headers(response), 200
+        
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+        
+    data = request.get_json(silent=True) or {}
+    threat_type = data.get('threat_type', 'all').strip()
+    target_brand = data.get('target_brand', 'Microsoft').strip()
+    
+    if threat_type not in ('email', 'domain', 'dom', 'all'):
+        return jsonify({'error': 'Invalid threat_type'}), 400
+        
+    if not target_brand:
+        target_brand = "Microsoft"
+        
+    if len(target_brand) > 100:
+        return jsonify({'error': 'Target brand name is too long'}), 400
+        
+    try:
+        result = run_async(phishing_simulator.generate_synthetic_threat(threat_type=threat_type, target_brand=target_brand))
+        response = jsonify(result)
+        return _apply_cors_headers(response), 200
+    except Exception as e:
+        logger.error(f"Error in /api/simulate: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
 
 
 # ============== API ROUTES ==============

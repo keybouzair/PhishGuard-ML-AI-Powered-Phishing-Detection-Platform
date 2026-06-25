@@ -160,6 +160,9 @@
       <button onclick="showSection('diag')" id="nav-diag" class="nav-btn w-full flex items-center gap-3 px-sm py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-white/5 active:scale-95 transition-all duration-200 text-left">
         <span class="material-symbols-outlined">biotech</span> Diagnostic Suite
       </button>
+      <button onclick="showSection('simulation')" id="nav-simulation" class="nav-btn w-full flex items-center gap-3 px-sm py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-white/5 active:scale-95 transition-all duration-200 text-left">
+        <span class="material-symbols-outlined">science</span> Zero-Day Simulation Lab
+      </button>
       <button onclick="showSection('hunter')" id="nav-hunter" class="nav-btn w-full flex items-center gap-3 px-sm py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-white/5 active:scale-95 transition-all duration-200 text-left">
         <span class="material-symbols-outlined">security</span> Threat Hunter Agents
       </button>
@@ -473,6 +476,138 @@
               <h4 class="font-semibold text-on-surface">DNS Flux Monitor</h4>
             </div>
             <p class="text-xs text-on-surface-variant">Monitors suspicious domains for rapid IP address changes indicative of botnet hosting.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ───── ZERO-DAY SIMULATION LAB VIEW ───── -->
+    <div id="section-simulation" class="section-panel">
+      <div class="mb-6">
+        <h2 class="font-headline-lg text-headline-lg text-on-surface">Zero-Day Simulation Lab</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant mt-1">A sandboxed red-team generative tool to craft synthetic phishing emails, typosquatted domains, and DOM templates.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Configuration & Parameters -->
+        <div class="lg:col-span-1 space-y-6">
+          <div class="glass-panel rounded-2xl p-6 space-y-4">
+            <h3 class="font-title-lg text-title-lg text-on-surface border-b border-white/10 pb-3 flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary">tune</span> Generator Settings
+            </h3>
+            
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant/80 mb-2">Target Brand</label>
+                <input type="text" id="simBrandInput" value="Microsoft" placeholder="e.g. Google, PayPal, Apple"
+                  class="w-full bg-surface border border-white/10 rounded-xl py-3 px-4 text-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all"/>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant/80 mb-2">Threat Vector</label>
+                <select id="simVectorSelect"
+                  class="w-full bg-surface border border-white/10 rounded-xl py-3 px-4 text-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all">
+                  <option value="all">Full Threat Bundle (All)</option>
+                  <option value="domain">Typosquatted Domain Variation</option>
+                  <option value="email">AI Phishing Email Lure</option>
+                  <option value="dom">Login Page DOM Template</option>
+                </select>
+              </div>
+            </div>
+
+            <button onclick="triggerSimulation()" class="w-full bg-primary text-on-primary hover:bg-primary/80 py-3.5 rounded-xl text-sm font-semibold transition-all shadow-[0_0_15px_rgba(173,198,255,0.15)] flex items-center justify-center gap-2 active:scale-95 duration-100">
+              <span class="material-symbols-outlined">science</span> Build Threat Payload
+            </button>
+          </div>
+
+          <!-- Sandbox Execution Log -->
+          <div class="glass-panel rounded-2xl p-6">
+            <h4 class="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3">Generation Diagnostics</h4>
+            <div id="simLogConsole" class="bg-surface-container-lowest/80 border border-white/5 rounded-xl p-4 h-48 font-mono text-[11px] leading-relaxed text-on-surface-variant/90 overflow-y-auto space-y-1.5 scrollbar-thin">
+              <div class="text-on-surface-variant/40">&gt; Lab sandbox idle. Select settings and deploy generator.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Simulation Results Output -->
+        <div class="lg:col-span-2 space-y-6">
+          <div id="simulationOutputContainer" class="hidden space-y-6">
+            
+            <!-- Typosquat Card -->
+            <div id="simDomainCard" class="glass-panel rounded-2xl p-6 hidden transition-all duration-300">
+              <div class="flex items-center justify-between border-b border-white/10 pb-3 mb-4">
+                <h4 class="font-title-lg text-title-lg text-on-surface flex items-center gap-2">
+                  <span class="material-symbols-outlined text-secondary">dns</span> Domain Typosquat
+                </h4>
+                <span class="bg-secondary/15 text-secondary text-[10px] px-2 py-0.5 rounded font-mono uppercase font-bold tracking-wider">Evasive</span>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-surface-container rounded-xl p-4 border border-white/5">
+                  <span class="text-[10px] uppercase font-bold text-on-surface-variant/60 tracking-wider">Generated Domain</span>
+                  <p id="simDomainVal" class="text-base font-mono text-primary mt-1 font-bold select-all"></p>
+                </div>
+                <div class="bg-surface-container rounded-xl p-4 border border-white/5">
+                  <span class="text-[10px] uppercase font-bold text-on-surface-variant/60 tracking-wider">Evasion Technique</span>
+                  <p id="simDomainTech" class="text-xs text-on-surface mt-1"></p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Email Lure Card -->
+            <div id="simEmailCard" class="glass-panel rounded-2xl p-6 hidden transition-all duration-300">
+              <div class="flex items-center justify-between border-b border-white/10 pb-3 mb-4">
+                <h4 class="font-title-lg text-title-lg text-on-surface flex items-center gap-2">
+                  <span class="material-symbols-outlined text-primary">mail</span> AI Phishing Email
+                </h4>
+                <div class="flex gap-2">
+                  <span id="simEmailUrgency" class="bg-error/15 text-error text-[10px] px-2 py-0.5 rounded font-mono uppercase font-bold tracking-wider"></span>
+                  <span id="simEmailTech" class="bg-primary/15 text-primary text-[10px] px-2 py-0.5 rounded font-mono uppercase font-bold tracking-wider"></span>
+                </div>
+              </div>
+              <div class="bg-surface-container-lowest/80 border border-white/5 rounded-xl overflow-hidden text-xs">
+                <div class="bg-surface-container/60 p-4 border-b border-white/8 space-y-1.5 font-sans">
+                  <div><span class="text-on-surface-variant/50">Subject:</span> <strong id="simEmailSubject" class="text-on-surface"></strong></div>
+                  <div><span class="text-on-surface-variant/50">From:</span> <span class="font-mono text-secondary-fixed-dim/90">security@domain-spoofed-gateway.net</span></div>
+                </div>
+                <div class="p-5 font-sans leading-relaxed text-on-surface/90 whitespace-pre-wrap selection:bg-primary/30" id="simEmailBody"></div>
+              </div>
+            </div>
+
+            <!-- DOM Template Card -->
+            <div id="simDomCard" class="glass-panel rounded-2xl p-6 hidden transition-all duration-300">
+              <div class="flex items-center justify-between border-b border-white/10 pb-3 mb-4">
+                <h4 class="font-title-lg text-title-lg text-on-surface flex items-center gap-2">
+                  <span class="material-symbols-outlined text-secondary">web</span> Login Page DOM Template
+                </h4>
+                <button onclick="toggleDomPreview()" class="flex items-center gap-1.5 bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 px-3 py-1 rounded-lg text-xs font-semibold transition-all">
+                  <span id="domPreviewBtnIcon" class="material-symbols-outlined text-sm">visibility</span> <span id="domPreviewBtnText">Preview Live</span>
+                </button>
+              </div>
+              <p class="text-xs text-on-surface-variant mb-3"><span class="font-bold text-on-surface">Technique:</span> <span id="simDomTechText"></span></p>
+              
+              <!-- Code block -->
+              <div id="simDomCodeContainer" class="bg-surface-container-lowest border border-white/5 rounded-xl p-4 overflow-x-auto relative group">
+                <button onclick="copyDomCode()" class="absolute right-3 top-3 bg-white/5 border border-white/10 hover:bg-white/10 text-on-surface-variant hover:text-on-surface p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span class="material-symbols-outlined text-sm">content_copy</span>
+                </button>
+                <pre class="font-mono text-[11px] leading-relaxed text-secondary/90 max-h-72 overflow-y-auto" id="simDomCode"></pre>
+              </div>
+
+              <!-- Preview Frame -->
+              <div id="simDomFrameContainer" class="hidden border border-white/10 rounded-xl overflow-hidden bg-background h-[320px]">
+                <iframe id="simDomPreviewFrame" class="w-full h-full bg-white" sandbox="allow-scripts"></iframe>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Empty State -->
+          <div id="simulationPlaceholder" class="glass-panel rounded-2xl p-12 flex flex-col items-center justify-center text-center">
+            <div class="w-16 h-16 rounded-full bg-primary/5 border border-primary/10 flex items-center justify-center mb-4">
+              <span class="material-symbols-outlined text-primary text-3xl">science</span>
+            </div>
+            <h3 class="font-title-lg text-title-lg text-on-surface">SOC Sandbox Unloaded</h3>
+            <p class="text-xs text-on-surface-variant mt-2 max-w-sm">Configure target parameters and trigger the Threat Builder to generate synthetic payloads powered by the Gemini AI risk engine.</p>
           </div>
         </div>
       </div>
@@ -861,6 +996,155 @@
       .catch(err => {
         loaderDiv.remove();
         appendMessage('Error communicating with the security assistant.', false);
+      });
+    }
+
+    // ── Zero-Day Simulation Lab Controllers ──
+    let generatedDomCode = "";
+
+    function simLog(msg, type = "info") {
+      const consoleEl = document.getElementById('simLogConsole');
+      if (!consoleEl) return;
+      const timestamp = new Date().toLocaleTimeString();
+      let colorClass = "text-on-surface-variant/80";
+      if (type === "success") colorClass = "text-secondary";
+      if (type === "error") colorClass = "text-error";
+      if (type === "warning") colorClass = "text-primary";
+      
+      const entry = document.createElement('div');
+      entry.className = colorClass;
+      entry.innerHTML = `<span class="text-on-surface-variant/40">[${timestamp}]</span> &gt; ${msg}`;
+      consoleEl.appendChild(entry);
+      consoleEl.scrollTop = consoleEl.scrollHeight;
+    }
+
+    function triggerSimulation() {
+      const brand = document.getElementById('simBrandInput').value.trim() || "Microsoft";
+      const vector = document.getElementById('simVectorSelect').value;
+      
+      const placeholder = document.getElementById('simulationPlaceholder');
+      const container = document.getElementById('simulationOutputContainer');
+      const domainCard = document.getElementById('simDomainCard');
+      const emailCard = document.getElementById('simEmailCard');
+      const domCard = document.getElementById('simDomCard');
+      
+      placeholder.classList.add('hidden');
+      container.classList.remove('hidden');
+      
+      // Reset cards visibility
+      domainCard.classList.add('hidden');
+      emailCard.classList.add('hidden');
+      domCard.classList.add('hidden');
+      
+      // Hide frame preview
+      document.getElementById('simDomFrameContainer').classList.add('hidden');
+      document.getElementById('simDomCodeContainer').classList.remove('hidden');
+      document.getElementById('domPreviewBtnIcon').textContent = "visibility";
+      document.getElementById('domPreviewBtnText').textContent = "Preview Live";
+      
+      simLog(`Initializing Threat Builder targeting '${brand}'...`, "warning");
+      simLog(`Target vector configured: ${vector.toUpperCase()}`, "info");
+      simLog(`Querying Gemini Generative Engine...`, "info");
+      
+      // Show loading logs in terminal
+      let loadCount = 0;
+      const loadInterval = setInterval(() => {
+        if (loadCount === 0) simLog("Connecting to sandboxed generator cluster...", "info");
+        if (loadCount === 1) simLog("Generating threat indicators and evasive payload...", "info");
+        loadCount++;
+      }, 1000);
+
+      fetch('/api/simulate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          threat_type: vector,
+          target_brand: brand
+        })
+      })
+      .then(res => {
+        clearInterval(loadInterval);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then(data => {
+        simLog("Payload generated successfully by Gemini!", "success");
+        
+        // Populate Domain Card
+        if (data.domain) {
+          domainCard.classList.remove('hidden');
+          document.getElementById('simDomainVal').textContent = data.domain.synthetic_domain;
+          document.getElementById('simDomainTech').textContent = data.domain.technique;
+          simLog(`[Domain] Evasive domain crafted: ${data.domain.synthetic_domain}`, "success");
+        }
+        
+        // Populate Email Card
+        if (data.email) {
+          emailCard.classList.remove('hidden');
+          document.getElementById('simEmailUrgency').textContent = `Urgency: ${data.email.urgency_score}%`;
+          document.getElementById('simEmailTech').textContent = data.email.persuasion_technique;
+          document.getElementById('simEmailSubject').textContent = data.email.subject;
+          document.getElementById('simEmailBody').textContent = data.email.body;
+          simLog(`[Email] Phishing lure written: ${data.email.subject}`, "success");
+        }
+        
+        // Populate DOM Card
+        if (data.dom_template) {
+          domCard.classList.remove('hidden');
+          document.getElementById('simDomTechText').textContent = data.dom_template.technique;
+          document.getElementById('simDomCode').textContent = data.dom_template.snippet;
+          generatedDomCode = data.dom_template.snippet;
+          simLog(`[DOM] Login page template written (${data.dom_template.snippet.length} bytes)`, "success");
+        }
+        
+        simLog("Threat Bundle build execution complete.", "warning");
+      })
+      .catch(err => {
+        clearInterval(loadInterval);
+        simLog(`Generation failed: ${err.message}`, "error");
+        showToast('Failed to generate threat simulation payload.', 'error');
+        placeholder.classList.remove('hidden');
+        container.classList.add('hidden');
+      });
+    }
+
+    function toggleDomPreview() {
+      const codeContainer = document.getElementById('simDomCodeContainer');
+      const frameContainer = document.getElementById('simDomFrameContainer');
+      const btnIcon = document.getElementById('domPreviewBtnIcon');
+      const btnText = document.getElementById('domPreviewBtnText');
+      const iframe = document.getElementById('simDomPreviewFrame');
+      
+      if (frameContainer.classList.contains('hidden')) {
+        // Switch to Preview
+        codeContainer.classList.add('hidden');
+        frameContainer.classList.remove('hidden');
+        btnIcon.textContent = "code";
+        btnText.textContent = "Show Source";
+        
+        // Inject HTML code into iframe safely
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        doc.open();
+        doc.write(generatedDomCode);
+        doc.close();
+        
+        simLog("Rendered live DOM preview in sandboxed iframe.", "info");
+      } else {
+        // Switch to Source
+        codeContainer.classList.remove('hidden');
+        frameContainer.classList.add('hidden');
+        btnIcon.textContent = "visibility";
+        btnText.textContent = "Preview Live";
+      }
+    }
+
+    function copyDomCode() {
+      navigator.clipboard.writeText(generatedDomCode).then(() => {
+        showToast('Login DOM code copied to clipboard!', 'success');
+      }).catch(err => {
+        showToast('Failed to copy code.', 'error');
       });
     }
 
