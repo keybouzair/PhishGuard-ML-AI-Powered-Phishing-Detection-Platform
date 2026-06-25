@@ -37,3 +37,5 @@ python-Levenshtein>=0.21.0
 schedule>=1.2.0
 urllib3>=2.0.0
 gunicorn>=21.2.0
+pydantic-settings>=2.0.0
+pydantic>=2.0.0

@@ -61,3 +61,5 @@ flake8>=6.1.0
 # pymsteams>=0.2.0
 
 gunicorn>=21.2.0
+pydantic-settings>=2.0.0
+pydantic>=2.0.0
