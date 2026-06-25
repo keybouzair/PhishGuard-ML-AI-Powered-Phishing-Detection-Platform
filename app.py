@@ -539,7 +539,10 @@ app.config['SESSION_COOKIE_SECURE'] = os.environ.get('FLASK_ENV') == 'production
 
 # Configure Flask-Session
 app.config['SESSION_TYPE'] = 'filesystem'
-app.config['SESSION_FILE_DIR'] = 'session_files'
+if os.environ.get("VERCEL") == "1":
+    app.config['SESSION_FILE_DIR'] = '/tmp/session_files'
+else:
+    app.config['SESSION_FILE_DIR'] = 'session_files'
 app.config['SESSION_PERMANENT'] = False
 app.config['SESSION_USE_SIGNER'] = True
 app.config['SESSION_FILE_THRESHOLD'] = 100
@@ -581,8 +584,12 @@ def add_request_observability_headers(response):
     return response
 
 # Ensure directories exist
-os.makedirs('session_files', exist_ok=True)
-os.makedirs('logs', exist_ok=True)
+if os.environ.get("VERCEL") == "1":
+    os.makedirs('/tmp/session_files', exist_ok=True)
+    os.makedirs('/tmp/logs', exist_ok=True)
+else:
+    os.makedirs('session_files', exist_ok=True)
+    os.makedirs('logs', exist_ok=True)
 
 
 # ============== AUTH ROUTES ==============

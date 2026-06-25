@@ -10,11 +10,13 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 import os
 from io import StringIO, BytesIO
-import html2pdf
 from jinja2 import Template
 import pandas as pd
 
-DATABASE_PATH = 'phishing_detection.db'
+if os.environ.get("VERCEL") == "1":
+    DATABASE_PATH = '/tmp/phishing_detection.db'
+else:
+    DATABASE_PATH = 'phishing_detection.db'
 
 
 # ==================== BROWSER EXTENSION MANAGER ====================

@@ -17,7 +17,10 @@ import socket
 from queue import Queue
 from threading import Thread
 
-DATABASE_PATH = 'phishing_detection.db'
+if os.environ.get("VERCEL") == "1":
+    DATABASE_PATH = '/tmp/phishing_detection.db'
+else:
+    DATABASE_PATH = 'phishing_detection.db'
 
 
 class WebhookManager:

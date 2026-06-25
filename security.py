@@ -20,8 +20,12 @@ from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
-DATABASE_PATH = 'phishing_detection.db'
-ENCRYPTION_KEY_FILE = 'encryption.key'
+if os.environ.get("VERCEL") == "1":
+    DATABASE_PATH = '/tmp/phishing_detection.db'
+    ENCRYPTION_KEY_FILE = '/tmp/encryption.key'
+else:
+    DATABASE_PATH = 'phishing_detection.db'
+    ENCRYPTION_KEY_FILE = 'encryption.key'
 
 
 # ============== Rate Limiting ==============
