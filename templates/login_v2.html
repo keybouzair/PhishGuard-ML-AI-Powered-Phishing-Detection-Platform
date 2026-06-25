@@ -598,6 +598,8 @@
       document.getElementById('overlayMsg').textContent = msg;
       const resp = await fetch('/google_login', {
         method: 'POST',
+        mode: 'cors',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id_token: idToken })
       });
