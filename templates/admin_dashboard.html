@@ -1,1083 +1,870 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Phishing Detection System</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.css" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Admin Dashboard — PhishGuard-ML</title>
+  <meta name="description" content="PhishGuard-ML admin command center. Manage users, blocklist, activity and system settings."/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-container-low": "#1b1b1e",
+            "primary": "#adc6ff",
+            "secondary": "#4edea3",
+            "secondary-fixed-dim": "#4edea3",
+            "error": "#ffb4ab",
+            "on-surface": "#e4e1e6",
+            "on-surface-variant": "#c2c6d6",
+            "surface": "#131316",
+            "surface-container": "#1f1f22",
+            "surface-container-high": "#2a2a2d",
+            "surface-container-highest": "#353438",
+            "surface-variant": "#353438",
+            "surface-bright": "#39393c",
+            "surface-dim": "#131316",
+            "background": "#131316",
+            "on-primary": "#002e6a",
+            "on-secondary": "#003824",
+            "primary-container": "#4d8eff",
+            "secondary-container": "#00a572",
+            "error-container": "#93000a",
+            "on-error": "#690005",
+            "outline": "#8c909f",
+            "outline-variant": "#424754",
+          },
+          fontFamily: { sans: ["Geist","sans-serif"] }
         }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px 0;
-        }
-
-        .sidebar {
-            background: #2c3e50;
-            min-height: 100vh;
-            padding: 20px 0;
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 250px;
-            overflow-y: auto;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-        }
-
-        .sidebar-brand {
-            padding: 20px;
-            text-align: center;
-            border-bottom: 2px solid #34495e;
-            margin-bottom: 20px;
-        }
-
-        .sidebar-brand h3 {
-            color: #fff;
-            font-size: 1.5rem;
-            margin: 0;
-        }
-
-        .sidebar-brand small {
-            color: #95a5a6;
-        }
-
-        .nav-item {
-            margin: 5px 0;
-        }
-
-        .nav-link {
-            color: #ecf0f1;
-            padding: 12px 20px;
-            display: block;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            border-left: 3px solid transparent;
-        }
-
-        .nav-link:hover, .nav-link.active {
-            background: #34495e;
-            border-left-color: #3498db;
-            color: #fff;
-        }
-
-        .nav-link i {
-            margin-right: 10px;
-            width: 20px;
-        }
-
-        .main-content {
-            margin-left: 250px;
-            padding: 30px;
-        }
-
-        .top-navbar {
-            background: white;
-            padding: 15px 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #3498db;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-        }
-
-        .stats-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            border-left: 4px solid #3498db;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
-        }
-
-        .stat-card.safe {
-            border-left-color: #27ae60;
-        }
-
-        .stat-card.unsafe {
-            border-left-color: #e74c3c;
-        }
-
-        .stat-card.total {
-            border-left-color: #f39c12;
-        }
-
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #2c3e50;
-            margin: 10px 0;
-        }
-
-        .stat-label {
-            color: #7f8c8d;
-            font-size: 0.9rem;
-        }
-
-        .stat-icon {
-            font-size: 2rem;
-            color: #3498db;
-            margin-bottom: 10px;
-        }
-
-        .stat-card.safe .stat-icon {
-            color: #27ae60;
-        }
-
-        .stat-card.unsafe .stat-icon {
-            color: #e74c3c;
-        }
-
-        .stat-card.total .stat-icon {
-            color: #f39c12;
-        }
-
-        .section-title {
-            color: white;
-            font-size: 1.5rem;
-            margin-bottom: 20px;
-            margin-top: 30px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid rgba(255,255,255,0.3);
-        }
-
-        .card {
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            background: white;
-        }
-
-        .card-header {
-            background: #f8f9fa;
-            border-bottom: 1px solid #dee2e6;
-            border-radius: 10px 10px 0 0;
-            padding: 15px 20px;
-            font-weight: 600;
-        }
-
-        .table {
-            margin-bottom: 0;
-        }
-
-        .table thead th {
-            border-bottom: 2px solid #dee2e6;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-
-        .table tbody tr:hover {
-            background: #f8f9fa;
-        }
-
-        .btn-sm {
-            padding: 5px 10px;
-            font-size: 0.85rem;
-        }
-
-        .badge-safe {
-            background: #27ae60;
-            color: white;
-        }
-
-        .badge-unsafe {
-            background: #e74c3c;
-            color: white;
-        }
-
-        .search-box {
-            position: relative;
-            margin-bottom: 20px;
-        }
-
-        .search-box input {
-            border-radius: 20px;
-            padding: 10px 15px;
-            border: 1px solid #ddd;
-            width: 100%;
-        }
-
-        .search-box i {
-            position: absolute;
-            right: 15px;
-            top: 12px;
-            color: #999;
-        }
-
-        .chart-container {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-
-        .btn-primary-custom {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            border-radius: 5px;
-            padding: 10px 20px;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btn-primary-custom:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .modal-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .footer {
-            text-align: center;
-            color: white;
-            padding: 20px;
-            margin-top: 50px;
-        }
-
-        .alert-success {
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
-            border-radius: 10px;
-        }
-
-        .alert-danger {
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
-            border-radius: 10px;
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 200px;
-            }
-
-            .main-content {
-                margin-left: 200px;
-                padding: 15px;
-            }
-
-            .stats-container {
-                grid-template-columns: 1fr;
-            }
-
-            .top-navbar {
-                flex-direction: column;
-                gap: 10px;
-            }
-        }
-
-        @media (max-width: 576px) {
-            .sidebar {
-                width: 0;
-                position: absolute;
-            }
-
-            .main-content {
-                margin-left: 0;
-            }
-
-            .table {
-                font-size: 0.85rem;
-            }
-        }
-    </style>
+      }
+    }
+  </script>
+  <style>
+    * { font-family: 'Geist', sans-serif; }
+    .glass-panel {
+      background-color: rgba(27,27,30,0.80);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,0.09);
+    }
+    .glass-panel:hover { border-color: rgba(255,255,255,0.16); }
+    .scrollbar-hide::-webkit-scrollbar { display:none; }
+    .scrollbar-hide { -ms-overflow-style:none; scrollbar-width:none; }
+    @keyframes ping-slow { 75%,100%{transform:scale(1.8);opacity:0} }
+    .animate-ping-slow { animation: ping-slow 2s cubic-bezier(0,0,0.2,1) infinite; }
+    input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus {
+      -webkit-text-fill-color: #e4e1e6;
+      -webkit-box-shadow: 0 0 0px 1000px #1f1f22 inset;
+    }
+    /* Section transitions */
+    .section-panel { display: none; }
+    .section-panel.active { display: block; }
+    /* Chart override */
+    canvas { max-height: 280px !important; }
+    /* Custom scrollbar for terminal */
+    .term-scroll::-webkit-scrollbar { width: 4px; }
+    .term-scroll::-webkit-scrollbar-track { background: transparent; }
+    .term-scroll::-webkit-scrollbar-thumb { background: rgba(173,198,255,0.2); border-radius: 4px; }
+  </style>
 </head>
-<body>
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="sidebar-brand">
-            <h3><i class="fas fa-shield-alt"></i> Admin</h3>
-            <small>Phishing Detection</small>
-        </div>
-        <nav>
-            <a href="/admin_dashboard" class="nav-link active">
-                <i class="fas fa-chart-line"></i> Dashboard
-            </a>
-            <a href="#blocklist-section" class="nav-link" onclick="showSection('blocklist')">
-                <i class="fas fa-ban"></i> Blocklist Manager
-            </a>
-            <a href="#users-section" class="nav-link" onclick="showSection('users')">
-                <i class="fas fa-users"></i> Manage Users
-            </a>
-            <a href="#activity-section" class="nav-link" onclick="showSection('activity')">
-                <i class="fas fa-history"></i> Activity Log
-            </a>
-            <a href="#settings-section" class="nav-link" onclick="showSection('settings')">
-                <i class="fas fa-cog"></i> Settings
-            </a>
-            <hr style="border-color: #34495e;">
-            <a href="/logout" class="nav-link">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </a>
-        </nav>
+<body class="bg-background text-on-surface antialiased overflow-x-hidden">
+
+  <!-- Sidebar -->
+  <nav id="sidebar" class="h-screen w-64 fixed left-0 top-0 bg-surface-container-low/90 backdrop-blur-xl border-r border-white/8 flex flex-col py-5 px-3 z-40 hidden md:flex transition-all duration-300">
+    <!-- Brand -->
+    <div class="mb-8 px-3 flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined text-primary text-xl">shield</span>
+      </div>
+      <div>
+        <h1 class="text-base font-bold text-primary leading-tight tracking-tight">PhishGuard-ML</h1>
+        <p class="text-[10px] text-secondary uppercase tracking-widest flex items-center gap-1 mt-0.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span> Vigilance Active
+        </p>
+      </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="main-content">
-        <!-- Top Navbar -->
-        <div class="top-navbar">
-            <h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
-            <div class="user-info">
-                <div class="user-avatar">A</div>
-                <span>Admin User</span>
-            </div>
-        </div>
-
-        {% if session.get('message') %}
-            <div class="alert alert-success">{{ session.get('message') }}</div>
-        {% endif %}
-
-        <!-- Statistics Section -->
-        <div class="stats-container">
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
-                <div class="stat-label">Total URLs Checked</div>
-                <div class="stat-number">{{ total_urls }}</div>
-            </div>
-            <div class="stat-card safe">
-                <div class="stat-icon"><i class="fas fa-shield-alt"></i></div>
-                <div class="stat-label">Safe URLs</div>
-                <div class="stat-number">{{ safe_urls }}</div>
-            </div>
-            <div class="stat-card unsafe">
-                <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
-                <div class="stat-label">Unsafe URLs</div>
-                <div class="stat-number">{{ unsafe_urls }}</div>
-            </div>
-            <div class="stat-card total">
-                <div class="stat-icon"><i class="fas fa-users"></i></div>
-                <div class="stat-label">Active Users</div>
-                <div class="stat-number">{{ active_users }}</div>
-            </div>
-        </div>
-
-        <!-- Charts Section -->
-        <h2 class="section-title">Analytics</h2>
-        <div class="card-header">Overview</div>
-        <div style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-            <canvas id="predictionChart" height="80"></canvas>
-        </div>
-
-        <!-- Blocklist Manager Section -->
-        <div id="blocklist-section">
-            <h2 class="section-title">Blocklist Manager</h2>
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-ban"></i> Blocked URLs
-                    <button class="btn btn-sm btn-danger float-end" data-bs-toggle="modal" data-bs-target="#addBlocklistModal">
-                        <i class="fas fa-plus"></i> Add URL
-                    </button>
-                </div>
-                <div class="card-body">
-                    <div class="search-box">
-                        <input type="text" id="blocklistSearch" placeholder="Search blocklist..." onkeyup="filterBlocklist()">
-                        <i class="fas fa-search"></i>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>URL</th>
-                                    <th>Date Added</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="blocklistTable">
-                                <!-- Populated by JavaScript -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Users Manager Section -->
-        <div id="users-section" style="display: none;">
-            <h2 class="section-title">User Management</h2>
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-users"></i> System Users
-                    <button class="btn btn-sm btn-primary float-end" data-bs-toggle="modal" data-bs-target="#addUserModal">
-                        <i class="fas fa-plus"></i> Add User
-                    </button>
-                </div>
-                <div class="card-body">
-                    <div class="search-box">
-                        <input type="text" id="userSearch" placeholder="Search users..." onkeyup="filterUsers()">
-                        <i class="fas fa-search"></i>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Username</th>
-                                    <th>Email</th>
-                                    <th>Role</th>
-                                    <th>Status</th>
-                                    <th>URLs Checked</th>
-                                    <th>Last Active</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="usersTable">
-                                <!-- Populated by JavaScript -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Activity Log Section -->
-        <div id="activity-section" style="display: none;">
-            <h2 class="section-title">Activity Log</h2>
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-history"></i> Recent Activities
-                    <button class="btn btn-sm btn-secondary float-end" onclick="loadActivity()">
-                        <i class="fas fa-sync"></i> Refresh
-                    </button>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Time</th>
-                                    <th>User</th>
-                                    <th>Action</th>
-                                    <th>Details</th>
-                                    <th>IP Address</th>
-                                </tr>
-                            </thead>
-                            <tbody id="activityTable">
-                                <!-- Populated by JavaScript -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Settings Section -->
-        <div id="settings-section" style="display: none;">
-            <h2 class="section-title">System Settings</h2>
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-cog"></i> Configuration
-                </div>
-                <div class="card-body">
-                    <form id="settingsForm" onsubmit="saveSettings(event)">
-                        <div class="mb-3">
-                            <label class="form-label">System Name</label>
-                            <input type="text" class="form-control" id="systemName" value="Phishing Detection System">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Notification Email</label>
-                            <input type="email" class="form-control" id="notificationEmail" value="admin@phishing.com">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Maximum URLs per Session</label>
-                            <input type="number" class="form-control" id="maxUrls" value="100">
-                        </div>
-                        <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
-                                <label class="form-check-label">Enable email notifications</label>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="autoBlocklist" checked>
-                                <label class="form-check-label">Auto-add unsafe URLs to blocklist</label>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Save Settings
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="footer">
-            <p>&copy; 2026 Phishing Detection System. All rights reserved.</p>
-        </div>
+    <!-- Nav Links -->
+    <div class="flex-1 space-y-1">
+      <button onclick="showSection('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-primary font-semibold bg-primary/8 border-r-2 border-primary text-sm transition-all duration-150 active:scale-95">
+        <span class="material-symbols-outlined text-lg">dashboard</span> Dashboard
+      </button>
+      <button onclick="showSection('blocklist')" id="nav-blocklist" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-white/5 text-sm transition-all duration-150 active:scale-95">
+        <span class="material-symbols-outlined text-lg">block</span> Blocklist Manager
+      </button>
+      <button onclick="showSection('users')" id="nav-users" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-white/5 text-sm transition-all duration-150 active:scale-95">
+        <span class="material-symbols-outlined text-lg">group</span> Manage Users
+      </button>
+      <button onclick="showSection('activity')" id="nav-activity" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-white/5 text-sm transition-all duration-150 active:scale-95">
+        <span class="material-symbols-outlined text-lg">history</span> Activity Log
+      </button>
+      <button onclick="showSection('settings')" id="nav-settings" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-white/5 text-sm transition-all duration-150 active:scale-95">
+        <span class="material-symbols-outlined text-lg">settings</span> Configuration
+      </button>
     </div>
 
-    <!-- Add User Modal -->
-    <div class="modal fade" id="addUserModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Add New User</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="addUserForm">
-                        <div class="mb-3">
-                            <label class="form-label">Username</label>
-                            <input type="text" class="form-control" id="newUsername" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Password</label>
-                            <input type="password" class="form-control" id="newPassword" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" class="form-control" id="newEmail">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Role</label>
-                            <select class="form-control" id="newRole">
-                                <option value="user">User</option>
-                                <option value="admin">Admin</option>
-                            </select>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="addUser()">
-                        <i class="fas fa-plus"></i> Add User
-                    </button>
-                </div>
-            </div>
+    <!-- Bottom -->
+    <div class="pt-4 border-t border-white/8 space-y-2">
+      <a href="/logout" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:text-error hover:bg-error/5 text-sm transition-all duration-150">
+        <span class="material-symbols-outlined text-lg">logout</span> Logout
+      </a>
+    </div>
+  </nav>
+
+  <!-- Top Bar -->
+  <header class="h-16 fixed top-0 right-0 left-0 md:left-64 z-50 bg-surface/80 backdrop-blur-xl border-b border-white/8 flex justify-between items-center px-6">
+    <!-- Mobile menu btn -->
+    <button class="md:hidden text-on-surface-variant hover:text-on-surface" onclick="document.getElementById('sidebar').classList.toggle('hidden')">
+      <span class="material-symbols-outlined">menu</span>
+    </button>
+    <!-- Search -->
+    <div class="hidden sm:flex items-center w-full max-w-md bg-surface-container rounded-xl border border-white/10 focus-within:ring-1 focus-within:ring-primary/50 transition-all px-3 py-2 gap-2">
+      <span class="material-symbols-outlined text-on-surface-variant text-lg">search</span>
+      <input class="bg-transparent border-none focus:ring-0 text-sm text-on-surface w-full placeholder:text-on-surface-variant/50 outline-none" placeholder="Search users, IPs, domains…" type="text"/>
+    </div>
+    <!-- Right actions -->
+    <div class="flex items-center gap-3 ml-4">
+      <button class="relative text-on-surface-variant hover:text-primary transition-colors p-1.5 rounded-lg hover:bg-white/5">
+        <span class="material-symbols-outlined text-lg">notifications</span>
+        <span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span>
+      </button>
+      <div class="flex items-center gap-2.5 cursor-pointer group pl-3 border-l border-white/10">
+        <div class="text-right hidden sm:block">
+          <p class="text-xs font-semibold text-primary group-hover:text-primary/80 transition-colors">Admin: Uzair</p>
+          <p class="text-[10px] text-on-surface-variant uppercase tracking-wider">Superuser</p>
         </div>
+        <div class="w-8 h-8 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center">
+          <span class="material-symbols-outlined text-primary text-base">manage_accounts</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="pt-20 pb-10 px-5 md:px-8 md:ml-64 min-h-screen">
+
+    <!-- Flash messages -->
+    {% if session.get('message') %}
+    <div class="mb-5 flex items-start gap-3 bg-secondary/10 border border-secondary/25 rounded-xl px-4 py-3">
+      <span class="material-symbols-outlined text-secondary text-base mt-0.5">check_circle</span>
+      <p class="text-sm text-secondary">{{ session.get('message') }}</p>
+    </div>
+    {% endif %}
+
+    <!-- ───────── SECTION: DASHBOARD ───────── -->
+    <div id="section-dashboard" class="section-panel active">
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-on-surface">Command Overview</h2>
+        <p class="text-sm text-on-surface-variant mt-1">Real-time telemetry and system health.</p>
+      </div>
+
+      <!-- Stat Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+        <!-- Card 1: Total URLs -->
+        <div class="glass-panel rounded-2xl p-5 group transition-all hover:scale-[1.01] duration-200">
+          <div class="flex justify-between items-start mb-4">
+            <div class="w-9 h-9 rounded-xl bg-surface-variant flex items-center justify-center border border-white/5">
+              <span class="material-symbols-outlined text-on-surface-variant text-lg">radar</span>
+            </div>
+            <span class="text-[11px] font-semibold text-secondary bg-secondary/10 border border-secondary/20 px-2 py-0.5 rounded-full flex items-center gap-1">
+              <span class="material-symbols-outlined text-[11px]">trending_up</span>+12%
+            </span>
+          </div>
+          <p class="text-[11px] font-semibold text-on-surface-variant uppercase tracking-widest mb-1">Total URLs Checked</p>
+          <p class="text-2xl font-bold text-on-surface">{{ total_urls }}</p>
+        </div>
+        <!-- Card 2: Safe URLs -->
+        <div class="glass-panel rounded-2xl p-5 group transition-all hover:scale-[1.01] duration-200">
+          <div class="flex justify-between items-start mb-4">
+            <div class="w-9 h-9 rounded-xl bg-secondary/10 border border-secondary/20 flex items-center justify-center">
+              <span class="material-symbols-outlined text-secondary text-lg">verified_user</span>
+            </div>
+          </div>
+          <p class="text-[11px] font-semibold text-on-surface-variant uppercase tracking-widest mb-1">Safe URLs</p>
+          <p class="text-2xl font-bold text-secondary">{{ safe_urls }}</p>
+        </div>
+        <!-- Card 3: Phishing Caught -->
+        <div class="glass-panel rounded-2xl p-5 group transition-all hover:scale-[1.01] duration-200 relative overflow-hidden">
+          <div class="absolute -right-3 -top-3 w-20 h-20 bg-error/5 rounded-full blur-xl"></div>
+          <div class="flex justify-between items-start mb-4 relative z-10">
+            <div class="w-9 h-9 rounded-xl bg-error/10 border border-error/20 flex items-center justify-center">
+              <span class="material-symbols-outlined text-error text-lg">bug_report</span>
+            </div>
+            <span class="relative flex h-3 w-3 mt-1">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-3 w-3 bg-error"></span>
+            </span>
+          </div>
+          <p class="text-[11px] font-semibold text-on-surface-variant uppercase tracking-widest mb-1">Phishing Caught</p>
+          <p class="text-2xl font-bold text-error">{{ unsafe_urls }}</p>
+        </div>
+        <!-- Card 4: Active Users -->
+        <div class="glass-panel rounded-2xl p-5 group transition-all hover:scale-[1.01] duration-200">
+          <div class="flex justify-between items-start mb-4">
+            <div class="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+              <span class="material-symbols-outlined text-primary text-lg">group</span>
+            </div>
+          </div>
+          <p class="text-[11px] font-semibold text-on-surface-variant uppercase tracking-widest mb-1">Active Users</p>
+          <p class="text-2xl font-bold text-on-surface">{{ active_users }}</p>
+        </div>
+      </div>
+
+      <!-- Chart + API Status Row -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+        <!-- Chart -->
+        <div class="glass-panel rounded-2xl p-6 lg:col-span-2">
+          <div class="flex items-center justify-between mb-5">
+            <h3 class="text-base font-bold text-on-surface">URL Classification Overview</h3>
+            <span class="text-xs text-on-surface-variant bg-surface-variant px-2 py-1 rounded-lg">All Time</span>
+          </div>
+          <div class="flex justify-center">
+            <canvas id="predictionChart"></canvas>
+          </div>
+        </div>
+        <!-- API Status -->
+        <div class="glass-panel rounded-2xl p-6">
+          <h3 class="text-base font-bold text-on-surface mb-5">External API Status</h3>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-on-surface flex items-center gap-2">
+                <span class="material-symbols-outlined text-on-surface-variant text-sm">api</span> VirusTotal
+              </span>
+              <span class="text-[10px] font-bold bg-secondary/10 text-secondary border border-secondary/20 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <span class="w-1 h-1 bg-secondary rounded-full"></span> UP
+              </span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-on-surface flex items-center gap-2">
+                <span class="material-symbols-outlined text-on-surface-variant text-sm">shield_locked</span> Google Safe
+              </span>
+              <span class="text-[10px] font-bold bg-secondary/10 text-secondary border border-secondary/20 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <span class="w-1 h-1 bg-secondary rounded-full"></span> UP
+              </span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-on-surface flex items-center gap-2">
+                <span class="material-symbols-outlined text-on-surface-variant text-sm">network_node</span> AbuseIPDB
+              </span>
+              <span class="text-[10px] font-bold bg-secondary/10 text-secondary border border-secondary/20 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <span class="w-1 h-1 bg-secondary rounded-full"></span> UP
+              </span>
+            </div>
+          </div>
+          <div class="mt-6 pt-4 border-t border-white/8">
+            <p class="text-[11px] text-on-surface-variant uppercase tracking-wider font-semibold mb-3">System Info</p>
+            <div class="space-y-2 text-xs text-on-surface-variant">
+              <div class="flex justify-between">
+                <span>ML Model</span><span class="text-secondary font-semibold">v2.1 Active</span>
+              </div>
+              <div class="flex justify-between">
+                <span>Threat Agents</span><span class="text-primary font-semibold">12 Running</span>
+              </div>
+              <div class="flex justify-between">
+                <span>Last Sync</span><span class="text-on-surface font-semibold">Just now</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Edit User Modal -->
-    <div class="modal fade" id="editUserModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Edit User</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="editUserForm">
-                        <input type="hidden" id="editUsername">
-                        <div class="mb-3">
-                            <label class="form-label">Username</label>
-                            <input type="text" class="form-control" id="editUsernameDisplay" disabled>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">New Password (leave blank to keep current)</label>
-                            <input type="password" class="form-control" id="editPassword">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" class="form-control" id="editEmail">
-                        </div>
-                        <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="editIsActive" checked>
-                                <label class="form-check-label">Account Active</label>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="updateUser()">
-                        <i class="fas fa-save"></i> Save Changes
-                    </button>
-                </div>
-            </div>
+    <!-- ───────── SECTION: BLOCKLIST ───────── -->
+    <div id="section-blocklist" class="section-panel">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-2xl font-bold text-on-surface">Blocklist Manager</h2>
+          <p class="text-sm text-on-surface-variant mt-1">Manage blocked URLs and domains.</p>
         </div>
+        <button onclick="openModal('addBlocklistModal')" class="flex items-center gap-2 bg-primary text-on-primary px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary/80 transition-all shadow-[0_0_15px_rgba(173,198,255,0.15)] hover:scale-[1.02] duration-150">
+          <span class="material-symbols-outlined text-base">add</span> Add URL
+        </button>
+      </div>
+      <div class="glass-panel rounded-2xl overflow-hidden">
+        <div class="p-4 border-b border-white/8 flex items-center gap-3">
+          <span class="material-symbols-outlined text-on-surface-variant text-lg">search</span>
+          <input type="text" id="blocklistSearch" onkeyup="filterBlocklist()" placeholder="Search blocked URLs…" class="bg-transparent border-none focus:ring-0 text-sm text-on-surface placeholder:text-on-surface-variant/50 outline-none w-full"/>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-white/8 bg-surface-container/50">
+                <th class="text-left px-5 py-3 text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">#</th>
+                <th class="text-left px-5 py-3 text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">URL</th>
+                <th class="text-left px-5 py-3 text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Date Added</th>
+                <th class="text-right px-5 py-3 text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Action</th>
+              </tr>
+            </thead>
+            <tbody id="blocklistTable" class="divide-y divide-white/5">
+              <!-- JS populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
-    <!-- Add to Blocklist Modal -->
-    <div class="modal fade" id="addBlocklistModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Add URL to Blocklist</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="addBlocklistForm">
-                        <div class="mb-3">
-                            <label class="form-label">URL</label>
-                            <input type="url" class="form-control" id="blocklistUrl" placeholder="https://example.com" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Reason</label>
-                            <input type="text" class="form-control" id="blocklistReason" placeholder="Phishing attempt">
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger" onclick="addToBlocklist()">
-                        <i class="fas fa-ban"></i> Add to Blocklist
-                    </button>
-                </div>
-            </div>
+    <!-- ───────── SECTION: USERS ───────── -->
+    <div id="section-users" class="section-panel">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-2xl font-bold text-on-surface">User Management</h2>
+          <p class="text-sm text-on-surface-variant mt-1">Create, edit, and deactivate system users.</p>
         </div>
+        <button onclick="openModal('addUserModal')" class="flex items-center gap-2 bg-primary text-on-primary px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary/80 transition-all shadow-[0_0_15px_rgba(173,198,255,0.15)] hover:scale-[1.02] duration-150">
+          <span class="material-symbols-outlined text-base">person_add</span> Add User
+        </button>
+      </div>
+      <div class="glass-panel rounded-2xl overflow-hidden">
+        <div class="p-4 border-b border-white/8 flex items-center gap-3">
+          <span class="material-symbols-outlined text-on-surface-variant text-lg">search</span>
+          <input type="text" id="userSearch" onkeyup="filterUsers()" placeholder="Search users by name or email…" class="bg-transparent border-none focus:ring-0 text-sm text-on-surface placeholder:text-on-surface-variant/50 outline-none w-full"/>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-white/8 bg-surface-container/50">
+                <th class="text-left px-5 py-3 text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Username</th>
+                <th class="text-left px-5 py-3 text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Email</th>
+                <th class="text-left px-5 py-3 text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Role</th>
+                <th class="text-left px-5 py-3 text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Status</th>
+                <th class="text-left px-5 py-3 text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">URLs Checked</th>
+                <th class="text-left px-5 py-3 text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Last Active</th>
+                <th class="text-right px-5 py-3 text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="usersTable" class="divide-y divide-white/5">
+              <!-- JS populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-    <script>
-        // Global data storage
-        let usersData = [];
-        let activityData = [];
+    <!-- ───────── SECTION: ACTIVITY ───────── -->
+    <div id="section-activity" class="section-panel">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-2xl font-bold text-on-surface">Activity Log</h2>
+          <p class="text-sm text-on-surface-variant mt-1">Audit trail of all system actions.</p>
+        </div>
+        <button onclick="loadActivity()" class="flex items-center gap-2 border border-white/10 text-on-surface px-4 py-2.5 rounded-xl text-sm hover:bg-white/5 transition-all duration-150">
+          <span class="material-symbols-outlined text-base">refresh</span> Refresh
+        </button>
+      </div>
+      <div class="glass-panel rounded-2xl overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-white/8 bg-surface-container/50">
+                <th class="text-left px-5 py-3 text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Time</th>
+                <th class="text-left px-5 py-3 text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">User</th>
+                <th class="text-left px-5 py-3 text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Action</th>
+                <th class="text-left px-5 py-3 text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Details</th>
+                <th class="text-left px-5 py-3 text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">IP Address</th>
+              </tr>
+            </thead>
+            <tbody id="activityTable" class="divide-y divide-white/5">
+              <!-- JS populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
-        // Load blocklist from server
-        async function loadBlocklist() {
-            try {
-                const response = await fetch('/get_blocklist');
-                const data = await response.json();
-                const tbody = document.getElementById('blocklistTable');
-                tbody.innerHTML = '';
-                
-                if (data.urls.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No URLs in blocklist</td></tr>';
-                    return;
-                }
-                
-                data.urls.forEach((url, index) => {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${index + 1}</td>
-                            <td><code>${escapeHtml(url)}</code></td>
-                            <td>${new Date().toLocaleDateString()}</td>
-                            <td>
-                                <button class="btn btn-sm btn-danger" onclick="removeFromBlocklist('${escapeHtml(url)}')">
-                                    <i class="fas fa-trash"></i> Remove
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                });
-            } catch (error) {
-                console.error('Error loading blocklist:', error);
-                showAlert('Error loading blocklist', 'danger');
-            }
+    <!-- ───────── SECTION: SETTINGS ───────── -->
+    <div id="section-settings" class="section-panel">
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-on-surface">Configuration</h2>
+        <p class="text-sm text-on-surface-variant mt-1">Manage system-wide settings and preferences.</p>
+      </div>
+      <div class="glass-panel rounded-2xl p-6 max-w-xl">
+        <form id="settingsForm" onsubmit="saveSettings(event)" class="space-y-5">
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">System Name</label>
+            <input type="text" id="systemName" value="Phishing Detection System" class="w-full bg-surface-container border border-white/10 rounded-xl py-3 px-4 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"/>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Notification Email</label>
+            <input type="email" id="notificationEmail" value="admin@phishing.com" class="w-full bg-surface-container border border-white/10 rounded-xl py-3 px-4 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"/>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Max URLs per Session</label>
+            <input type="number" id="maxUrls" value="100" class="w-full bg-surface-container border border-white/10 rounded-xl py-3 px-4 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"/>
+          </div>
+          <div class="flex items-center justify-between p-4 bg-surface-container rounded-xl border border-white/8">
+            <div>
+              <p class="text-sm font-semibold text-on-surface">Email Notifications</p>
+              <p class="text-xs text-on-surface-variant mt-0.5">Send alerts for suspicious URLs</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="emailNotifications" checked class="sr-only peer">
+              <div class="w-10 h-5 bg-surface-variant rounded-full peer peer-checked:bg-primary after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
+            </label>
+          </div>
+          <div class="flex items-center justify-between p-4 bg-surface-container rounded-xl border border-white/8">
+            <div>
+              <p class="text-sm font-semibold text-on-surface">Auto-Block Unsafe URLs</p>
+              <p class="text-xs text-on-surface-variant mt-0.5">Automatically add to blocklist</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="autoBlocklist" checked class="sr-only peer">
+              <div class="w-10 h-5 bg-surface-variant rounded-full peer peer-checked:bg-primary after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
+            </label>
+          </div>
+          <button type="submit" class="flex items-center gap-2 bg-primary text-on-primary px-6 py-3 rounded-xl text-sm font-semibold hover:bg-primary/80 transition-all shadow-[0_0_15px_rgba(173,198,255,0.15)] hover:scale-[1.02] duration-150">
+            <span class="material-symbols-outlined text-base">save</span> Save Settings
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ── MODALS ── -->
+
+  <!-- Add User Modal -->
+  <div id="addUserModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeModal('addUserModal')"></div>
+    <div class="relative glass-panel rounded-2xl p-6 w-full max-w-md z-10">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="text-base font-bold text-on-surface">Add New User</h3>
+        <button onclick="closeModal('addUserModal')" class="text-on-surface-variant hover:text-on-surface transition-colors">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <form id="addUserForm" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Username</label>
+          <input type="text" id="newUsername" required class="w-full bg-surface-container border border-white/10 rounded-xl py-2.5 px-4 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"/>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Password</label>
+          <input type="password" id="newPassword" required class="w-full bg-surface-container border border-white/10 rounded-xl py-2.5 px-4 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"/>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Email</label>
+          <input type="email" id="newEmail" class="w-full bg-surface-container border border-white/10 rounded-xl py-2.5 px-4 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"/>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Role</label>
+          <select id="newRole" class="w-full bg-surface-container border border-white/10 rounded-xl py-2.5 px-4 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all">
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div class="flex gap-3 pt-2">
+          <button type="button" onclick="closeModal('addUserModal')" class="flex-1 border border-white/10 text-on-surface py-2.5 rounded-xl text-sm hover:bg-white/5 transition-all">Cancel</button>
+          <button type="button" onclick="addUser()" class="flex-1 bg-primary text-on-primary py-2.5 rounded-xl text-sm font-semibold hover:bg-primary/80 transition-all">Add User</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit User Modal -->
+  <div id="editUserModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeModal('editUserModal')"></div>
+    <div class="relative glass-panel rounded-2xl p-6 w-full max-w-md z-10">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="text-base font-bold text-on-surface">Edit User</h3>
+        <button onclick="closeModal('editUserModal')" class="text-on-surface-variant hover:text-on-surface transition-colors">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <form id="editUserForm" class="space-y-4">
+        <input type="hidden" id="editUsername">
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Username</label>
+          <input type="text" id="editUsernameDisplay" disabled class="w-full bg-surface-container/50 border border-white/5 rounded-xl py-2.5 px-4 text-sm text-on-surface-variant"/>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">New Password <span class="normal-case text-on-surface-variant/50">(leave blank to keep)</span></label>
+          <input type="password" id="editPassword" class="w-full bg-surface-container border border-white/10 rounded-xl py-2.5 px-4 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"/>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Email</label>
+          <input type="email" id="editEmail" class="w-full bg-surface-container border border-white/10 rounded-xl py-2.5 px-4 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"/>
+        </div>
+        <div class="flex items-center justify-between p-4 bg-surface-container rounded-xl border border-white/8">
+          <p class="text-sm font-semibold text-on-surface">Account Active</p>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="editIsActive" checked class="sr-only peer">
+            <div class="w-10 h-5 bg-surface-variant rounded-full peer peer-checked:bg-secondary after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
+          </label>
+        </div>
+        <div class="flex gap-3 pt-2">
+          <button type="button" onclick="closeModal('editUserModal')" class="flex-1 border border-white/10 text-on-surface py-2.5 rounded-xl text-sm hover:bg-white/5 transition-all">Cancel</button>
+          <button type="button" onclick="updateUser()" class="flex-1 bg-primary text-on-primary py-2.5 rounded-xl text-sm font-semibold hover:bg-primary/80 transition-all">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Blocklist Modal -->
+  <div id="addBlocklistModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeModal('addBlocklistModal')"></div>
+    <div class="relative glass-panel rounded-2xl p-6 w-full max-w-md z-10">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="text-base font-bold text-on-surface">Add URL to Blocklist</h3>
+        <button onclick="closeModal('addBlocklistModal')" class="text-on-surface-variant hover:text-on-surface transition-colors">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <form id="addBlocklistForm" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">URL</label>
+          <input type="url" id="blocklistUrl" placeholder="https://example.com" required class="w-full bg-surface-container border border-white/10 rounded-xl py-2.5 px-4 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-error/50 transition-all"/>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Reason</label>
+          <input type="text" id="blocklistReason" placeholder="Phishing attempt" class="w-full bg-surface-container border border-white/10 rounded-xl py-2.5 px-4 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-error/50 transition-all"/>
+        </div>
+        <div class="flex gap-3 pt-2">
+          <button type="button" onclick="closeModal('addBlocklistModal')" class="flex-1 border border-white/10 text-on-surface py-2.5 rounded-xl text-sm hover:bg-white/5 transition-all">Cancel</button>
+          <button type="button" onclick="addToBlocklist()" class="flex-1 bg-error text-on-error py-2.5 rounded-xl text-sm font-semibold hover:bg-error/80 transition-all">Block URL</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Alert Toast Container -->
+  <div id="toastContainer" class="fixed bottom-6 right-6 z-[200] space-y-3 pointer-events-none"></div>
+
+  <script>
+    // ── Global data ──
+    let usersData = [];
+    let activityData = [];
+
+    // ── Section nav ──
+    function showSection(name) {
+      document.querySelectorAll('.section-panel').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(el => {
+        el.classList.remove('text-primary','font-semibold','bg-primary/8','border-r-2','border-primary');
+        el.classList.add('text-on-surface-variant');
+      });
+      document.getElementById('section-' + name).classList.add('active');
+      const btn = document.getElementById('nav-' + name);
+      if (btn) {
+        btn.classList.remove('text-on-surface-variant');
+        btn.classList.add('text-primary','font-semibold','bg-primary/8','border-r-2','border-primary');
+      }
+      // Load data
+      if (name === 'blocklist') loadBlocklist();
+      if (name === 'users') loadUsers();
+      if (name === 'activity') loadActivity();
+      if (name === 'settings') loadSettings();
+    }
+
+    // ── Modals ──
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    // ── Toast ──
+    function showToast(message, type = 'success') {
+      const colors = {
+        success: 'bg-secondary/10 border-secondary/30 text-secondary',
+        danger:  'bg-error/10 border-error/30 text-error',
+        warning: 'bg-primary/10 border-primary/30 text-primary',
+      };
+      const icons = { success: 'check_circle', danger: 'error', warning: 'warning' };
+      const toast = document.createElement('div');
+      toast.className = `pointer-events-auto flex items-start gap-3 glass-panel border ${colors[type] || colors.success} px-4 py-3 rounded-xl text-sm shadow-xl opacity-0 translate-y-4 transition-all duration-300`;
+      toast.innerHTML = `<span class="material-symbols-outlined text-base mt-0.5">${icons[type] || 'check_circle'}</span><p>${message}</p>`;
+      document.getElementById('toastContainer').appendChild(toast);
+      requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0)';
+      });
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(16px)';
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+
+    // ── Escape HTML ──
+    function escapeHtml(text) {
+      const d = document.createElement('div');
+      d.textContent = text;
+      return d.innerHTML;
+    }
+
+    // ── Blocklist ──
+    async function loadBlocklist() {
+      try {
+        const response = await fetch('/get_blocklist');
+        const data = await response.json();
+        const tbody = document.getElementById('blocklistTable');
+        tbody.innerHTML = '';
+        if (!data.urls || data.urls.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" class="px-5 py-8 text-center text-on-surface-variant text-sm">No URLs in blocklist</td></tr>';
+          return;
         }
-
-        async function removeFromBlocklist(url) {
-            if (!confirm('Are you sure you want to remove this URL from the blocklist?')) {
-                return;
-            }
-            
-            try {
-                const response = await fetch('/remove_from_blocklist', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url: url })
-                });
-                
-                const result = await response.json();
-                if (result.success) {
-                    showAlert('URL removed successfully!', 'success');
-                    loadBlocklist();
-                } else {
-                    showAlert('Error: ' + result.message, 'danger');
-                }
-            } catch (error) {
-                console.error('Error removing URL:', error);
-                showAlert('Failed to remove URL', 'danger');
-            }
-        }
-
-        async function addToBlocklist() {
-            const url = document.getElementById('blocklistUrl').value;
-            const reason = document.getElementById('blocklistReason').value || 'Added by admin';
-            
-            if (!url) {
-                showAlert('Please enter a URL', 'warning');
-                return;
-            }
-            
-            try {
-                const response = await fetch('/api/blocklist/add', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url: url, reason: reason })
-                });
-                
-                const result = await response.json();
-                if (result.success) {
-                    showAlert('URL added to blocklist!', 'success');
-                    bootstrap.Modal.getInstance(document.getElementById('addBlocklistModal')).hide();
-                    document.getElementById('blocklistUrl').value = '';
-                    document.getElementById('blocklistReason').value = '';
-                    loadBlocklist();
-                } else {
-                    showAlert('Error: ' + result.message, 'danger');
-                }
-            } catch (error) {
-                console.error('Error adding to blocklist:', error);
-                showAlert('Failed to add URL', 'danger');
-            }
-        }
-
-        // Load users from server
-        async function loadUsers() {
-            try {
-                const response = await fetch('/api/users');
-                const data = await response.json();
-                usersData = data.users || [];
-                renderUsers(usersData);
-            } catch (error) {
-                console.error('Error loading users:', error);
-                showAlert('Error loading users', 'danger');
-            }
-        }
-
-        function renderUsers(users) {
-            const tbody = document.getElementById('usersTable');
-            tbody.innerHTML = '';
-            
-            if (users.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No users found</td></tr>';
-                return;
-            }
-            
-            users.forEach(user => {
-                const statusBadge = user.is_active 
-                    ? '<span class="badge bg-success">Active</span>' 
-                    : '<span class="badge bg-danger">Inactive</span>';
-                const roleBadge = user.role === 'admin' 
-                    ? '<span class="badge bg-primary">Admin</span>' 
-                    : '<span class="badge bg-secondary">User</span>';
-                const lastLogin = user.last_login ? new Date(user.last_login).toLocaleString() : 'Never';
-                
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${escapeHtml(user.username)}</strong></td>
-                        <td>${escapeHtml(user.email || '-')}</td>
-                        <td>${roleBadge}</td>
-                        <td>${statusBadge}</td>
-                        <td>${user.url_count || 0}</td>
-                        <td>${lastLogin}</td>
-                        <td>
-                            <button class="btn btn-sm btn-info" onclick="editUser('${escapeHtml(user.username)}', '${escapeHtml(user.email || '')}', ${user.is_active})">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            ${user.role !== 'admin' ? `
-                            <button class="btn btn-sm btn-danger" onclick="deleteUser('${escapeHtml(user.username)}')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                            ` : ''}
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        function filterUsers() {
-            const search = document.getElementById('userSearch').value.toLowerCase();
-            const filtered = usersData.filter(u => 
-                u.username.toLowerCase().includes(search) || 
-                (u.email && u.email.toLowerCase().includes(search))
-            );
-            renderUsers(filtered);
-        }
-
-        async function addUser() {
-            const username = document.getElementById('newUsername').value;
-            const password = document.getElementById('newPassword').value;
-            const email = document.getElementById('newEmail').value;
-            const role = document.getElementById('newRole').value;
-            
-            if (!username || !password) {
-                showAlert('Username and password are required', 'warning');
-                return;
-            }
-            
-            try {
-                const response = await fetch('/api/users/add', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password, email, role })
-                });
-                
-                const result = await response.json();
-                if (result.success) {
-                    showAlert('User added successfully!', 'success');
-                    bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
-                    document.getElementById('newUsername').value = '';
-                    document.getElementById('newPassword').value = '';
-                    document.getElementById('newEmail').value = '';
-                    loadUsers();
-                } else {
-                    showAlert('Error: ' + result.message, 'danger');
-                }
-            } catch (error) {
-                console.error('Error adding user:', error);
-                showAlert('Failed to add user', 'danger');
-            }
-        }
-
-        function editUser(username, email, isActive) {
-            document.getElementById('editUsername').value = username;
-            document.getElementById('editUsernameDisplay').value = username;
-            document.getElementById('editEmail').value = email;
-            document.getElementById('editPassword').value = '';
-            document.getElementById('editIsActive').checked = isActive;
-            
-            new bootstrap.Modal(document.getElementById('editUserModal')).show();
-        }
-
-        async function updateUser() {
-            const username = document.getElementById('editUsername').value;
-            const password = document.getElementById('editPassword').value;
-            const email = document.getElementById('editEmail').value;
-            const isActive = document.getElementById('editIsActive').checked;
-            
-            try {
-                const response = await fetch('/api/users/update', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password, email, is_active: isActive })
-                });
-                
-                const result = await response.json();
-                if (result.success) {
-                    showAlert('User updated successfully!', 'success');
-                    bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
-                    loadUsers();
-                } else {
-                    showAlert('Error: ' + result.message, 'danger');
-                }
-            } catch (error) {
-                console.error('Error updating user:', error);
-                showAlert('Failed to update user', 'danger');
-            }
-        }
-
-        async function deleteUser(username) {
-            if (!confirm(`Are you sure you want to delete user "${username}"?`)) {
-                return;
-            }
-            
-            try {
-                const response = await fetch('/api/users/delete', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username })
-                });
-                
-                const result = await response.json();
-                if (result.success) {
-                    showAlert('User deleted successfully!', 'success');
-                    loadUsers();
-                } else {
-                    showAlert('Error: ' + result.message, 'danger');
-                }
-            } catch (error) {
-                console.error('Error deleting user:', error);
-                showAlert('Failed to delete user', 'danger');
-            }
-        }
-
-        // Load activity log
-        async function loadActivity() {
-            try {
-                const response = await fetch('/api/activity?limit=50');
-                const data = await response.json();
-                activityData = data.activities || [];
-                
-                const tbody = document.getElementById('activityTable');
-                tbody.innerHTML = '';
-                
-                if (activityData.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No activity recorded</td></tr>';
-                    return;
-                }
-                
-                activityData.forEach(activity => {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${activity.timestamp}</td>
-                            <td><strong>${escapeHtml(activity.username)}</strong></td>
-                            <td><span class="badge bg-info">${escapeHtml(activity.action)}</span></td>
-                            <td>${escapeHtml(activity.details || '-')}</td>
-                            <td><code>${escapeHtml(activity.ip_address || '-')}</code></td>
-                        </tr>
-                    `;
-                });
-            } catch (error) {
-                console.error('Error loading activity:', error);
-                showAlert('Error loading activity log', 'danger');
-            }
-        }
-
-        // Load and save settings
-        async function loadSettings() {
-            try {
-                const response = await fetch('/api/settings');
-                const data = await response.json();
-                
-                if (data.success && data.settings) {
-                    document.getElementById('systemName').value = data.settings.system_name || 'Phishing Detection System';
-                    document.getElementById('notificationEmail').value = data.settings.notification_email || '';
-                    document.getElementById('maxUrls').value = data.settings.max_urls_per_session || 100;
-                    document.getElementById('emailNotifications').checked = data.settings.email_notifications !== false;
-                    document.getElementById('autoBlocklist').checked = data.settings.auto_blocklist !== false;
-                }
-            } catch (error) {
-                console.error('Error loading settings:', error);
-            }
-        }
-
-        async function saveSettings(event) {
-            event.preventDefault();
-            
-            const settings = {
-                system_name: document.getElementById('systemName').value,
-                notification_email: document.getElementById('notificationEmail').value,
-                max_urls_per_session: parseInt(document.getElementById('maxUrls').value),
-                email_notifications: document.getElementById('emailNotifications').checked,
-                auto_blocklist: document.getElementById('autoBlocklist').checked
-            };
-            
-            try {
-                const response = await fetch('/api/settings', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(settings)
-                });
-                
-                const result = await response.json();
-                if (result.success) {
-                    showAlert('Settings saved successfully!', 'success');
-                } else {
-                    showAlert('Error: ' + result.message, 'danger');
-                }
-            } catch (error) {
-                console.error('Error saving settings:', error);
-                showAlert('Failed to save settings', 'danger');
-            }
-        }
-
-        function showSection(section) {
-            // Hide all sections
-            document.getElementById('blocklist-section').style.display = 'none';
-            document.getElementById('users-section').style.display = 'none';
-            document.getElementById('activity-section').style.display = 'none';
-            document.getElementById('settings-section').style.display = 'none';
-
-            // Update nav links
-            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-
-            // Show selected section and load data
-            if (section === 'blocklist') {
-                document.getElementById('blocklist-section').style.display = 'block';
-                loadBlocklist();
-            } else if (section === 'users') {
-                document.getElementById('users-section').style.display = 'block';
-                loadUsers();
-            } else if (section === 'activity') {
-                document.getElementById('activity-section').style.display = 'block';
-                loadActivity();
-            } else if (section === 'settings') {
-                document.getElementById('settings-section').style.display = 'block';
-                loadSettings();
-            }
-        }
-
-        // Utility functions
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        function showAlert(message, type) {
-            const alertDiv = document.createElement('div');
-            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-            alertDiv.innerHTML = `
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            
-            const mainContent = document.querySelector('.main-content');
-            const topNavbar = mainContent.querySelector('.top-navbar');
-            mainContent.insertBefore(alertDiv, topNavbar.nextSibling);
-            
-            setTimeout(() => alertDiv.remove(), 5000);
-        }
-
-        // Initialize Chart
-        const ctx = document.getElementById('predictionChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Safe URLs', 'Unsafe URLs'],
-                datasets: [{
-                    data: [{{ safe_urls }}, {{ unsafe_urls }}],
-                    backgroundColor: ['#27ae60', '#e74c3c'],
-                    borderColor: ['#fff', '#fff'],
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
-                }
-            }
+        data.urls.forEach((url, index) => {
+          tbody.innerHTML += `
+            <tr class="hover:bg-white/3 transition-colors">
+              <td class="px-5 py-3.5 text-on-surface-variant text-sm">${index + 1}</td>
+              <td class="px-5 py-3.5"><code class="text-error text-xs bg-error/8 px-2 py-0.5 rounded">${escapeHtml(url)}</code></td>
+              <td class="px-5 py-3.5 text-on-surface-variant text-sm">${new Date().toLocaleDateString()}</td>
+              <td class="px-5 py-3.5 text-right">
+                <button onclick="removeFromBlocklist('${escapeHtml(url)}')" class="text-xs text-error border border-error/20 bg-error/5 hover:bg-error/15 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 ml-auto">
+                  <span class="material-symbols-outlined text-xs">delete</span> Remove
+                </button>
+              </td>
+            </tr>`;
         });
+      } catch (e) { showToast('Error loading blocklist', 'danger'); }
+    }
 
-        // Load data on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            loadBlocklist();
+    function filterBlocklist() {
+      const q = document.getElementById('blocklistSearch').value.toLowerCase();
+      document.querySelectorAll('#blocklistTable tr').forEach(r => {
+        r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+      });
+    }
+
+    async function removeFromBlocklist(url) {
+      if (!confirm('Remove this URL from the blocklist?')) return;
+      try {
+        const r = await fetch('/remove_from_blocklist', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({url})
         });
-    </script>
+        const result = await r.json();
+        if (result.success) { showToast('URL removed from blocklist'); loadBlocklist(); }
+        else showToast('Error: ' + result.message, 'danger');
+      } catch(e) { showToast('Failed to remove URL', 'danger'); }
+    }
+
+    async function addToBlocklist() {
+      const url = document.getElementById('blocklistUrl').value;
+      const reason = document.getElementById('blocklistReason').value || 'Added by admin';
+      if (!url) { showToast('Please enter a URL', 'warning'); return; }
+      try {
+        const r = await fetch('/api/blocklist/add', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({url, reason})
+        });
+        const result = await r.json();
+        if (result.success) {
+          showToast('URL added to blocklist');
+          closeModal('addBlocklistModal');
+          document.getElementById('blocklistUrl').value = '';
+          document.getElementById('blocklistReason').value = '';
+          loadBlocklist();
+        } else showToast('Error: ' + result.message, 'danger');
+      } catch(e) { showToast('Failed to add URL', 'danger'); }
+    }
+
+    // ── Users ──
+    async function loadUsers() {
+      try {
+        const r = await fetch('/api/users');
+        const data = await r.json();
+        usersData = data.users || [];
+        renderUsers(usersData);
+      } catch(e) { showToast('Error loading users', 'danger'); }
+    }
+
+    function renderUsers(users) {
+      const tbody = document.getElementById('usersTable');
+      tbody.innerHTML = '';
+      if (!users.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="px-5 py-8 text-center text-on-surface-variant text-sm">No users found</td></tr>';
+        return;
+      }
+      users.forEach(u => {
+        const status = u.is_active
+          ? '<span class="text-[10px] font-bold bg-secondary/10 text-secondary border border-secondary/20 px-2 py-0.5 rounded-full">Active</span>'
+          : '<span class="text-[10px] font-bold bg-error/10 text-error border border-error/20 px-2 py-0.5 rounded-full">Inactive</span>';
+        const role = u.role === 'admin'
+          ? '<span class="text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded-full">Admin</span>'
+          : '<span class="text-[10px] font-bold bg-surface-variant text-on-surface-variant border border-white/10 px-2 py-0.5 rounded-full">User</span>';
+        const lastLogin = u.last_login ? new Date(u.last_login).toLocaleString() : 'Never';
+        tbody.innerHTML += `
+          <tr class="hover:bg-white/3 transition-colors">
+            <td class="px-5 py-3.5 text-sm font-semibold text-on-surface">${escapeHtml(u.username)}</td>
+            <td class="px-5 py-3.5 text-sm text-on-surface-variant">${escapeHtml(u.email || '—')}</td>
+            <td class="px-5 py-3.5">${role}</td>
+            <td class="px-5 py-3.5">${status}</td>
+            <td class="px-5 py-3.5 text-sm text-on-surface-variant">${u.url_count || 0}</td>
+            <td class="px-5 py-3.5 text-sm text-on-surface-variant">${lastLogin}</td>
+            <td class="px-5 py-3.5 text-right flex items-center gap-2 justify-end">
+              <button onclick="editUser('${escapeHtml(u.username)}','${escapeHtml(u.email||'')}',${u.is_active})" class="text-xs text-primary border border-primary/20 bg-primary/5 hover:bg-primary/15 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1">
+                <span class="material-symbols-outlined text-xs">edit</span>
+              </button>
+              ${u.role !== 'admin' ? `<button onclick="deleteUser('${escapeHtml(u.username)}')" class="text-xs text-error border border-error/20 bg-error/5 hover:bg-error/15 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1"><span class="material-symbols-outlined text-xs">delete</span></button>` : ''}
+            </td>
+          </tr>`;
+      });
+    }
+
+    function filterUsers() {
+      const q = document.getElementById('userSearch').value.toLowerCase();
+      renderUsers(usersData.filter(u =>
+        u.username.toLowerCase().includes(q) || (u.email && u.email.toLowerCase().includes(q))
+      ));
+    }
+
+    async function addUser() {
+      const username = document.getElementById('newUsername').value;
+      const password = document.getElementById('newPassword').value;
+      const email = document.getElementById('newEmail').value;
+      const role = document.getElementById('newRole').value;
+      if (!username || !password) { showToast('Username and password are required', 'warning'); return; }
+      try {
+        const r = await fetch('/api/users/add', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({username, password, email, role})
+        });
+        const result = await r.json();
+        if (result.success) {
+          showToast('User added successfully');
+          closeModal('addUserModal');
+          ['newUsername','newPassword','newEmail'].forEach(id => document.getElementById(id).value = '');
+          loadUsers();
+        } else showToast('Error: ' + result.message, 'danger');
+      } catch(e) { showToast('Failed to add user', 'danger'); }
+    }
+
+    function editUser(username, email, isActive) {
+      document.getElementById('editUsername').value = username;
+      document.getElementById('editUsernameDisplay').value = username;
+      document.getElementById('editEmail').value = email;
+      document.getElementById('editPassword').value = '';
+      document.getElementById('editIsActive').checked = isActive;
+      openModal('editUserModal');
+    }
+
+    async function updateUser() {
+      const username = document.getElementById('editUsername').value;
+      const password = document.getElementById('editPassword').value;
+      const email = document.getElementById('editEmail').value;
+      const isActive = document.getElementById('editIsActive').checked;
+      try {
+        const r = await fetch('/api/users/update', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({username, password, email, is_active: isActive})
+        });
+        const result = await r.json();
+        if (result.success) { showToast('User updated'); closeModal('editUserModal'); loadUsers(); }
+        else showToast('Error: ' + result.message, 'danger');
+      } catch(e) { showToast('Failed to update user', 'danger'); }
+    }
+
+    async function deleteUser(username) {
+      if (!confirm(`Delete user "${username}"?`)) return;
+      try {
+        const r = await fetch('/api/users/delete', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({username})
+        });
+        const result = await r.json();
+        if (result.success) { showToast('User deleted'); loadUsers(); }
+        else showToast('Error: ' + result.message, 'danger');
+      } catch(e) { showToast('Failed to delete user', 'danger'); }
+    }
+
+    // ── Activity ──
+    async function loadActivity() {
+      try {
+        const r = await fetch('/api/activity?limit=50');
+        const data = await r.json();
+        activityData = data.activities || [];
+        const tbody = document.getElementById('activityTable');
+        tbody.innerHTML = '';
+        if (!activityData.length) {
+          tbody.innerHTML = '<tr><td colspan="5" class="px-5 py-8 text-center text-on-surface-variant text-sm">No activity recorded</td></tr>';
+          return;
+        }
+        activityData.forEach(a => {
+          tbody.innerHTML += `
+            <tr class="hover:bg-white/3 transition-colors">
+              <td class="px-5 py-3.5 text-sm text-on-surface-variant">${a.timestamp}</td>
+              <td class="px-5 py-3.5 text-sm font-semibold text-on-surface">${escapeHtml(a.username)}</td>
+              <td class="px-5 py-3.5"><span class="text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded-full">${escapeHtml(a.action)}</span></td>
+              <td class="px-5 py-3.5 text-sm text-on-surface-variant">${escapeHtml(a.details || '—')}</td>
+              <td class="px-5 py-3.5"><code class="text-xs text-on-surface-variant bg-surface-variant px-2 py-0.5 rounded">${escapeHtml(a.ip_address || '—')}</code></td>
+            </tr>`;
+        });
+      } catch(e) { showToast('Error loading activity', 'danger'); }
+    }
+
+    // ── Settings ──
+    async function loadSettings() {
+      try {
+        const r = await fetch('/api/settings');
+        const data = await r.json();
+        if (data.success && data.settings) {
+          document.getElementById('systemName').value = data.settings.system_name || 'Phishing Detection System';
+          document.getElementById('notificationEmail').value = data.settings.notification_email || '';
+          document.getElementById('maxUrls').value = data.settings.max_urls_per_session || 100;
+          document.getElementById('emailNotifications').checked = data.settings.email_notifications !== false;
+          document.getElementById('autoBlocklist').checked = data.settings.auto_blocklist !== false;
+        }
+      } catch(e) { /* silently fail */ }
+    }
+
+    async function saveSettings(event) {
+      event.preventDefault();
+      const settings = {
+        system_name: document.getElementById('systemName').value,
+        notification_email: document.getElementById('notificationEmail').value,
+        max_urls_per_session: parseInt(document.getElementById('maxUrls').value),
+        email_notifications: document.getElementById('emailNotifications').checked,
+        auto_blocklist: document.getElementById('autoBlocklist').checked
+      };
+      try {
+        const r = await fetch('/api/settings', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify(settings)
+        });
+        const result = await r.json();
+        if (result.success) showToast('Settings saved successfully');
+        else showToast('Error: ' + result.message, 'danger');
+      } catch(e) { showToast('Failed to save settings', 'danger'); }
+    }
+
+    // ── Chart ──
+    const ctx = document.getElementById('predictionChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Safe URLs', 'Unsafe URLs'],
+        datasets: [{
+          data: [{{ safe_urls }}, {{ unsafe_urls }}],
+          backgroundColor: ['rgba(78,222,163,0.8)', 'rgba(255,180,171,0.8)'],
+          borderColor: ['rgba(78,222,163,1)', 'rgba(255,180,171,1)'],
+          borderWidth: 2,
+          hoverOffset: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        cutout: '65%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              color: '#c2c6d6',
+              padding: 20,
+              font: { family: 'Geist', size: 12 },
+              usePointStyle: true,
+              pointStyleWidth: 8
+            }
+          }
+        }
+      }
+    });
+
+    // ── Init ──
+    document.addEventListener('DOMContentLoaded', () => {
+      loadBlocklist();
+    });
+  </script>
 </body>
 </html>

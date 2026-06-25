@@ -147,7 +147,11 @@ def rate_limit(max_requests: int = 100, window_seconds: int = 60):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             # Get identifier (IP or user)
-            identifier = request.remote_addr
+            # C-12: Proxy-aware rate limiting
+            identifier = request.headers.get('X-Forwarded-For', request.remote_addr)
+            if identifier and ',' in identifier:
+                identifier = identifier.split(',')[0].strip()
+                
             if 'user' in session:
                 identifier = session['user']
             
@@ -625,8 +629,11 @@ def require_api_key(permissions: list = None):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            # Get API key from header or query param
-            api_key = request.headers.get('X-API-Key') or request.args.get('api_key')
+            # B-21: Reject API key in query string; require header
+            api_key = request.headers.get('X-API-Key')
+            auth_header = request.headers.get('Authorization')
+            if not api_key and auth_header and auth_header.startswith('Bearer '):
+                api_key = auth_header[7:]
             
             if not api_key:
                 return jsonify({'error': 'API key required'}), 401
@@ -660,15 +667,30 @@ class DataEncryption:
         self.fernet = Fernet(self.key)
     
     def _get_or_create_key(self) -> bytes:
-        """Get or create encryption key"""
+        """Get or create encryption key with secure permissions (B-20)"""
         if os.path.exists(ENCRYPTION_KEY_FILE):
+            # Verify permissions if we are on a POSIX system
+            if os.name == 'posix':
+                st = os.stat(ENCRYPTION_KEY_FILE)
+                if st.st_mode & 0o077:
+                    logging.getLogger('security').warning(
+                        "Insecure permissions on %s. Fixing...", ENCRYPTION_KEY_FILE
+                    )
+                    os.chmod(ENCRYPTION_KEY_FILE, 0o600)
             with open(ENCRYPTION_KEY_FILE, 'rb') as f:
                 return f.read()
         
-        # Generate new key
+        # Generate new key securely
         key = Fernet.generate_key()
-        with open(ENCRYPTION_KEY_FILE, 'wb') as f:
-            f.write(key)
+        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+        try:
+            fd = os.open(ENCRYPTION_KEY_FILE, flags, 0o600)
+            with open(fd, 'wb') as f:
+                f.write(key)
+        except FileExistsError:
+            # Race condition: another process created it
+            with open(ENCRYPTION_KEY_FILE, 'rb') as f:
+                return f.read()
         
         return key
     

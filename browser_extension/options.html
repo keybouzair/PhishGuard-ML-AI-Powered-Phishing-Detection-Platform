@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhishGuard Options</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 550px;
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .subtitle {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 24px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #334155;
+        }
+        
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+            outline: none;
+            background: #f8fafc;
+        }
+        
+        input[type="text"]:focus, input[type="password"]:focus {
+            border-color: #6366f1;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .help-text {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+        
+        .btn {
+            display: inline-block;
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        
+        .btn:hover {
+            opacity: 0.95;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+        }
+        
+        .status-message {
+            margin-top: 15px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            text-align: center;
+            display: none;
+        }
+        
+        .status-success {
+            background: #dcfce7;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔒 PhishGuard Options</h1>
+        <p class="subtitle">Configure your extension settings below.</p>
+        
+        <div class="form-group">
+            <label for="apiBaseUrl">API Base URL</label>
+            <input type="text" id="apiBaseUrl" placeholder="e.g. http://localhost:5001">
+            <p class="help-text">The backend server URL. (default is http://localhost:5001)</p>
+        </div>
+        
+        <div class="form-group">
+            <label for="apiKey">API Key (Optional)</label>
+            <input type="password" id="apiKey" placeholder="Authorization key if required by server">
+            <p class="help-text">Used for Bearer authentication headers when communicating with the API.</p>
+        </div>
+
+        <div class="form-group">
+            <label for="scanAllowlist">Scan Allowlist (Optional)</label>
+            <input type="text" id="scanAllowlist" placeholder="e.g. google.com, github.com">
+            <p class="help-text">Comma-separated list of domains to scan. Leave empty or set to * to scan all websites.</p>
+        </div>
+        
+        <button class="btn" id="saveBtn">Save Settings</button>
+        <div class="status-message" id="statusMsg">Settings saved successfully!</div>
+    </div>
+    <script src="options.js"></script>
+</body>
+</html>

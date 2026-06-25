@@ -3,7 +3,7 @@ Advanced Features API Routes
 Includes browser extension endpoints, report generation, and advanced integrations
 """
 
-from flask import Blueprint, jsonify, request, send_file, render_template_string
+from flask import Blueprint, jsonify, request, send_file, render_template_string, session
 from functools import wraps
 import json
 from datetime import datetime
@@ -17,6 +17,17 @@ advanced_bp = Blueprint('advanced', __name__, url_prefix='/api')
 
 # Email service instance
 email_service = EmailService()
+
+
+# A-04: Require admin authentication for ALL routes in this blueprint
+@advanced_bp.before_request
+def _require_admin_session():
+    """Block unauthenticated access to the entire /api/ advanced blueprint."""
+    # Allow CORS preflight
+    if request.method == 'OPTIONS':
+        return None
+    if 'user' not in session or session.get('role') != 'admin':
+        return jsonify({'error': 'Authentication required', 'status': 'forbidden'}), 403
 
 
 # ==================== BROWSER EXTENSION ENDPOINTS ====================

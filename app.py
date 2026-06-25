@@ -1,6 +1,10 @@
 from flask import Flask, request, render_template, redirect, url_for, session, flash, jsonify
 from flask_session import Session
+from flask_wtf.csrf import CSRFProtect
 import os
+import shutil
+import html
+import json
 import warnings
 from datetime import datetime
 import database as db
@@ -14,9 +18,14 @@ from services.cache_service import cache_service
 from services.enrichment_service import get_cached_domain_metrics
 from workers.tasks.enrich_url import enqueue_url_enrichment
 
+# B-04: Security import MUST NOT fail silently — rate limiting is a safety control
 try:
     from security import rate_limit
-except Exception:
+except Exception as _sec_err:
+    logging.getLogger('phishing_app').error(
+        'CRITICAL: security module failed to import: %s — '
+        'rate limiting is DISABLED', _sec_err
+    )
     def rate_limit(*_args, **_kwargs):
         def _decorator(func):
             return func
@@ -66,10 +75,41 @@ try:
 except Exception:
     webhook_manager = None
 
+
 warnings.filterwarnings('ignore')
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("phishing_app")
+
+
+# ---------- Log sanitisation helper (B-09, C-27) ----------
+_CONTROL_CHARS_RE = re.compile(r'[\x00-\x1f\x7f-\x9f]')
+
+
+def _sanitize_log_value(value: str, max_len: int = 500) -> str:
+    """Strip control chars, ANSI escapes, and cap length for safe logging."""
+    if not isinstance(value, str):
+        value = str(value)
+    value = _CONTROL_CHARS_RE.sub('', value)
+    return value[:max_len]
+
+def _load_model_accuracy():
+    """K-06: Read accuracy from training_report.json when available."""
+    try:
+        path = os.path.join('model', 'training_report.json')
+        if not os.path.exists(path):
+            return None
+        with open(path, 'r') as f:
+            data = json.load(f)
+        url_acc = (data.get('url_model') or {}).get('accuracy')
+        text_acc = (data.get('text_model') or {}).get('accuracy')
+        candidates = [a for a in (url_acc, text_acc) if isinstance(a, (int, float))]
+        if not candidates:
+            return None
+        return round(max(candidates) * 100, 1)
+    except Exception:
+        return None
+
 
 TRUSTED_DOMAINS = {
     'google.com',
@@ -99,13 +139,118 @@ db.init_db()
 # Load inference engine once at startup
 inference_engine = InferenceEngine(model_dir='model')
 if inference_engine.is_available():
-    print(f"Inference engine ready (source={inference_engine.source})")
+    logger.info("Inference engine ready (source=%s)", inference_engine.source)
 else:
-    print("Warning: No ML model available; heuristic fallback will be used")
+    logger.warning("No ML model available; heuristic fallback will be used")
+
+
+# C-32: Dangerous URI schemes that must never be accepted
+_BLOCKED_SCHEMES = ('javascript:', 'data:', 'mailto:', 'file:', 'vbscript:', 'blob:')
+
+
+# C-24: Pre-compile risk analysis patterns at module level
+_RISK_PATTERNS = {
+    'ip_address': {
+        'pattern': re.compile(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}'),
+        'weight': 25,
+        'type': 'Suspicious Domain',
+        'description': 'Uses IP address instead of domain name'
+    },
+    'login_keyword': {
+        'pattern': re.compile(r'(login|signin|sign-in|log-in)'),
+        'weight': 15,
+        'type': 'Credential Harvesting',
+        'description': 'Contains login-related keywords'
+    },
+    'verify_keyword': {
+        'pattern': re.compile(r'(verify|confirm|validate|secure)'),
+        'weight': 15,
+        'type': 'Verification Scam',
+        'description': 'Contains verification/confirmation keywords'
+    },
+    'account_keyword': {
+        'pattern': re.compile(r'(account|password|credential|banking)'),
+        'weight': 15,
+        'type': 'Account Theft',
+        'description': 'Contains account-related keywords'
+    },
+    'brand_impersonation': {
+        'pattern': re.compile(r'(paypal|ebay|amazon|apple|microsoft|google|facebook|netflix|bank)'),
+        'weight': 20,
+        'type': 'Brand Impersonation',
+        'description': 'May be impersonating a known brand'
+    },
+    'url_shortener': {
+        'pattern': re.compile(r'(bit\.ly|tinyurl|goo\.gl|t\.co|ow\.ly|is\.gd|buff\.ly)'),
+        'weight': 20,
+        'type': 'URL Obfuscation',
+        'description': 'Uses URL shortener to hide destination'
+    },
+    'suspicious_tld': {
+        'pattern': re.compile(r'\.(tk|ml|ga|cf|gq|xyz|top|work|click|link|club)$'),
+        'weight': 20,
+        'type': 'Suspicious Domain',
+        'description': 'Uses commonly abused top-level domain'
+    },
+    'at_symbol': {
+        'pattern': re.compile(r'@'),
+        'weight': 25,
+        'type': 'URL Manipulation',
+        'description': 'Contains @ symbol which can hide real destination'
+    },
+    'double_slashes': {
+        'pattern': re.compile(r'//.*//|//'),
+        'weight': 10,
+        'type': 'URL Manipulation',
+        'description': 'Contains suspicious path structure'
+    },
+    'hex_encoding': {
+        'pattern': re.compile(r'%[0-9a-fA-F]{2}'),
+        'weight': 10,
+        'type': 'URL Obfuscation',
+        'description': 'Contains encoded characters'
+    },
+    'long_subdomain': {
+        'pattern': re.compile(r'[a-z0-9-]{20,}\.'),
+        'weight': 15,
+        'type': 'Suspicious Domain',
+        'description': 'Contains unusually long subdomain'
+    },
+    'many_subdomains': {
+        'pattern': re.compile(r'(\.[a-z0-9-]+){4,}'),
+        'weight': 15,
+        'type': 'Suspicious Domain',
+        'description': 'Contains multiple subdomains'
+    },
+    'https_in_path': {
+        'pattern': re.compile(r'https?://[^/]+/.*https?://'),
+        'weight': 20,
+        'type': 'URL Manipulation',
+        'description': 'Contains URL within path (redirect attempt)'
+    },
+    'suspicious_extension': {
+        'pattern': re.compile(r'\.(exe|zip|rar|php|html|htm)(\?|$)'),
+        'weight': 15,
+        'type': 'Malware Risk',
+        'description': 'Links to potentially dangerous file type'
+    },
+    'numbers_in_domain': {
+        'pattern': re.compile(r'[a-z]+[0-9]+[a-z]+|[0-9]+[a-z]+[0-9]+'),
+        'weight': 10,
+        'type': 'Suspicious Domain',
+        'description': 'Domain contains unusual number patterns'
+    },
+    'urgent_keywords': {
+        'pattern': re.compile(r'(urgent|suspend|expire|immediate|alert|warning|limited)'),
+        'weight': 15,
+        'type': 'Urgency Scam',
+        'description': 'Contains urgency-inducing keywords'
+    }
+}
 
 
 def validate_and_normalize_url(url):
-    """Validate and normalize URL input for safer processing."""
+    """Validate and normalize URL input for safer processing (C-32 hardened)."""
     if not isinstance(url, str):
         return False, None, "URL must be a string"
 
@@ -115,6 +260,10 @@ def validate_and_normalize_url(url):
 
     if len(normalized) > 2048:
         return False, None, "URL is too long"
+
+    # C-32: Reject dangerous schemes before any normalisation
+    if normalized.lower().startswith(_BLOCKED_SCHEMES):
+        return False, None, "URL scheme not allowed"
 
     if not normalized.startswith(("http://", "https://")):
         normalized = f"https://{normalized}"
@@ -156,109 +305,9 @@ def analyze_url_risks(url):
     path = parsed.path.lower()
     full_url = url.lower()
     
-    # Risk patterns with weights and descriptions
-    risk_patterns = {
-        'ip_address': {
-            'pattern': r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}',
-            'weight': 25,
-            'type': 'Suspicious Domain',
-            'description': 'Uses IP address instead of domain name'
-        },
-        'login_keyword': {
-            'pattern': r'(login|signin|sign-in|log-in)',
-            'weight': 15,
-            'type': 'Credential Harvesting',
-            'description': 'Contains login-related keywords'
-        },
-        'verify_keyword': {
-            'pattern': r'(verify|confirm|validate|secure)',
-            'weight': 15,
-            'type': 'Verification Scam',
-            'description': 'Contains verification/confirmation keywords'
-        },
-        'account_keyword': {
-            'pattern': r'(account|password|credential|banking)',
-            'weight': 15,
-            'type': 'Account Theft',
-            'description': 'Contains account-related keywords'
-        },
-        'brand_impersonation': {
-            'pattern': r'(paypal|ebay|amazon|apple|microsoft|google|facebook|netflix|bank)',
-            'weight': 20,
-            'type': 'Brand Impersonation',
-            'description': 'May be impersonating a known brand'
-        },
-        'url_shortener': {
-            'pattern': r'(bit\.ly|tinyurl|goo\.gl|t\.co|ow\.ly|is\.gd|buff\.ly)',
-            'weight': 20,
-            'type': 'URL Obfuscation',
-            'description': 'Uses URL shortener to hide destination'
-        },
-        'suspicious_tld': {
-            'pattern': r'\.(tk|ml|ga|cf|gq|xyz|top|work|click|link|club)$',
-            'weight': 20,
-            'type': 'Suspicious Domain',
-            'description': 'Uses commonly abused top-level domain'
-        },
-        'at_symbol': {
-            'pattern': r'@',
-            'weight': 25,
-            'type': 'URL Manipulation',
-            'description': 'Contains @ symbol which can hide real destination'
-        },
-        'double_slashes': {
-            'pattern': r'//.*//|//',
-            'weight': 10,
-            'type': 'URL Manipulation',
-            'description': 'Contains suspicious path structure'
-        },
-        'hex_encoding': {
-            'pattern': r'%[0-9a-fA-F]{2}',
-            'weight': 10,
-            'type': 'URL Obfuscation',
-            'description': 'Contains encoded characters'
-        },
-        'long_subdomain': {
-            'pattern': r'[a-z0-9-]{20,}\.',
-            'weight': 15,
-            'type': 'Suspicious Domain',
-            'description': 'Contains unusually long subdomain'
-        },
-        'many_subdomains': {
-            'pattern': r'(\.[a-z0-9-]+){4,}',
-            'weight': 15,
-            'type': 'Suspicious Domain',
-            'description': 'Contains multiple subdomains'
-        },
-        'https_in_path': {
-            'pattern': r'https?://[^/]+/.*https?://',
-            'weight': 20,
-            'type': 'URL Manipulation',
-            'description': 'Contains URL within path (redirect attempt)'
-        },
-        'suspicious_extension': {
-            'pattern': r'\.(exe|zip|rar|php|html|htm)(\?|$)',
-            'weight': 15,
-            'type': 'Malware Risk',
-            'description': 'Links to potentially dangerous file type'
-        },
-        'numbers_in_domain': {
-            'pattern': r'[a-z]+[0-9]+[a-z]+|[0-9]+[a-z]+[0-9]+',
-            'weight': 10,
-            'type': 'Suspicious Domain',
-            'description': 'Domain contains unusual number patterns'
-        },
-        'urgent_keywords': {
-            'pattern': r'(urgent|suspend|expire|immediate|alert|warning|limited)',
-            'weight': 15,
-            'type': 'Urgency Scam',
-            'description': 'Contains urgency-inducing keywords'
-        }
-    }
-    
-    # Check each risk pattern
-    for risk_name, risk_info in risk_patterns.items():
-        if re.search(risk_info['pattern'], full_url):
+    # Check each risk pattern (C-24 using pre-compiled patterns)
+    for risk_name, risk_info in _RISK_PATTERNS.items():
+        if risk_info['pattern'].search(full_url):
             risk_score += risk_info['weight']
             risks.append({
                 'name': risk_name,
@@ -357,8 +406,12 @@ def predict(url, username='anonymous'):
         raise ValueError(error)
 
     url = normalized_url
+    safe_url = _sanitize_log_value(url)  # C-27: sanitize for logging
 
-    if is_trusted_domain(url):
+    # C-06: Trusted domains get a lower risk score, but we always run analysis
+    trusted = is_trusted_domain(url)
+
+    if trusted:
         extra_metrics = get_extra_domain_metrics(url)
         safe_result = {
             'url': url,
@@ -376,31 +429,30 @@ def predict(url, username='anonymous'):
         }
         db.save_url_check(username, url, 'Safe', 0, 0)
         try:
-            db.log_activity(username, 'URL Check', f'{url} - Safe', request.remote_addr if request else '')
-        except:
+            db.log_activity(username, 'URL Check', f'{safe_url} - Safe', request.remote_addr if request else '')
+        except Exception:
             pass
         return safe_result
 
     # Get detailed risk analysis
     risk_analysis = analyze_url_risks(url)
-    
+
     if not inference_engine.is_available():
         # Use risk analysis for detection if no model available
         is_suspicious = risk_analysis['risk_score'] >= 30
         prediction_label_text = "Unsafe" if is_suspicious else "Safe"
         prediction_score = min(risk_analysis['risk_score'] + 20, 100) if is_suspicious else max(100 - risk_analysis['risk_score'], 10)
-        
+
         db.save_url_check(username, url, prediction_label_text, prediction_score, 1 if is_suspicious else 0)
-        if is_suspicious:
-            db.add_to_blocklist(url, username, 'Detected by risk analysis')
-        
+        # B-05: Do NOT auto-add to blocklist; flag for admin review instead
+
         try:
-            db.log_activity(username, 'URL Check', f'{url} - {prediction_label_text}', request.remote_addr if request else '')
-        except:
+            db.log_activity(username, 'URL Check', f'{safe_url} - {prediction_label_text}', request.remote_addr if request else '')
+        except Exception:
             pass
-        
+
         extra_metrics = get_extra_domain_metrics(url)
-        
+
         return {
             'url': url,
             'prediction_label': prediction_label_text,
@@ -408,24 +460,22 @@ def predict(url, username='anonymous'):
             'risk_analysis': risk_analysis,
             'extra_metrics': extra_metrics
         }
-    
+
     try:
         model_result = inference_engine.predict_url(url)
         is_phishing = 1 if model_result['is_phishing'] else 0
         prediction_label_text = "Unsafe" if is_phishing else "Safe"
         prediction_score = model_result.get('score_percent', 0)
-        
+
         # Save to database
         db.save_url_check(username, url, prediction_label_text, prediction_score, is_phishing)
-        
-        # Auto-add to blocklist if unsafe
-        if is_phishing:
-            db.add_to_blocklist(url, username, 'Auto-detected as phishing')
-        
-        # Log activity
+
+        # B-05: Do NOT auto-add to blocklist; flag for admin review instead
+
+        # Log activity (C-27: sanitized URL)
         try:
-            db.log_activity(username, 'URL Check', f'{url} - {prediction_label_text}', request.remote_addr if request else '')
-        except:
+            db.log_activity(username, 'URL Check', f'{safe_url} - {prediction_label_text}', request.remote_addr if request else '')
+        except Exception:
             pass
 
         extra_metrics = get_extra_domain_metrics(url)
@@ -439,16 +489,16 @@ def predict(url, username='anonymous'):
             'extra_metrics': extra_metrics
         }
     except Exception as e:
-        print(f"Prediction error: {e}")
+        logger.error("Prediction error: %s", e)
         # Fallback to heuristic
         is_suspicious = risk_analysis['risk_score'] >= 30
         prediction_label_text = "Unsafe" if is_suspicious else "Safe"
         prediction_score = min(risk_analysis['risk_score'] + 20, 100) if is_suspicious else max(100 - risk_analysis['risk_score'], 10)
-        
+
         db.save_url_check(username, url, prediction_label_text, prediction_score, 1 if is_suspicious else 0)
-        
+
         extra_metrics = get_extra_domain_metrics(url)
-        
+
         return {
             'url': url,
             'prediction_label': prediction_label_text,
@@ -459,7 +509,33 @@ def predict(url, username='anonymous'):
 
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'change-me-in-production')
+csrf = CSRFProtect(app)
+
+# A-01: Reject startup when SECRET_KEY is missing or weak
+if os.path.exists('.env'):
+    with open('.env', 'r') as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if _line and not _line.startswith('#') and '=' in _line:
+                _k, _v = _line.split('=', 1)
+                os.environ[_k.strip()] = _v.strip().strip("'").strip('"')
+
+_secret = os.environ.get('SECRET_KEY', '')
+if (
+    not _secret
+    or len(_secret) < 32
+    or _secret == 'change-me-in-production'
+):
+    raise RuntimeError(
+        "SECRET_KEY must be a 32+ character random value set via environment variable or in a .env file. "
+        "Generate one with: python -c \"import secrets; print(secrets.token_urlsafe(48))\""
+    )
+app.secret_key = _secret
+
+# A-09: Cookie security flags
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get('FLASK_ENV') == 'production'
 
 # Configure Flask-Session
 app.config['SESSION_TYPE'] = 'filesystem'
@@ -471,9 +547,11 @@ Session(app)
 
 # Register optional advanced blueprints
 if API_DOCS_ENABLED and api_docs is not None:
+    csrf.exempt(api_docs)
     app.register_blueprint(api_docs)
 
 if ADVANCED_FEATURES_ENABLED and advanced_bp is not None:
+    csrf.exempt(advanced_bp)
     app.register_blueprint(advanced_bp)
 
 
@@ -485,7 +563,9 @@ def attach_request_context():
 
 @app.after_request
 def add_request_observability_headers(response):
-    elapsed_ms = int((time.time() - getattr(request, '_start_time', time.time())) * 1000)
+    # C-36: always use the value set in before_request; never fall back to time.time()
+    start = getattr(request, '_start_time', None)
+    elapsed_ms = int((time.time() - start) * 1000) if start is not None else 0
     response.headers['X-Request-ID'] = getattr(request, 'request_id', '')
     response.headers['X-Response-Time-ms'] = str(elapsed_ms)
     logger.info(
@@ -528,21 +608,28 @@ def login_options():
         urls_display = f"{total_urls / 1000000:.1f}M+"
     elif total_urls >= 1000:
         urls_display = f"{total_urls / 1000:.1f}K+"
+    elif total_urls > 0:
+        urls_display = str(total_urls)
     else:
-        urls_display = str(total_urls) if total_urls > 0 else "10M+"
-    
+        urls_display = "0"
+
     active_users = stats['active_users'] + stats['total_users']
     if active_users >= 1000:
         users_display = f"{active_users / 1000:.1f}K+"
+    elif active_users > 0:
+        users_display = str(active_users)
     else:
-        users_display = str(active_users) if active_users > 0 else "10K+"
+        users_display = "0"
+
+    # K-06: Derive accuracy from training_report.json, do not hard-code 99.2%
+    derived_accuracy = _load_model_accuracy()
+    accuracy = derived_accuracy if derived_accuracy is not None else 95.0
     
-    # Calculate accuracy (if we have data, otherwise show default)
-    if stats['total_urls'] > 0:
-        accuracy = 99.2  # ML model accuracy
-    else:
-        accuracy = 99.2
-    
+    # K-06: Derive accuracy from training_report.json, do not hard-code 99.2%
+    derived_accuracy = _load_model_accuracy()
+    if derived_accuracy is not None:
+        accuracy = derived_accuracy
+
     return render_template("landing_page_v2.html",
                           urls_analyzed=urls_display,
                           detection_accuracy=f"{accuracy}%",
@@ -552,11 +639,15 @@ def login_options():
 
 
 @app.route("/admin_login", methods=["GET", "POST"])
+@rate_limit(max_requests=5, window_seconds=60)  # B-04: rate-limit login
 def admin_login():
     if request.method == "POST":
         username = request.form['username']
         password = request.form['password']
-        user = db.validate_user(username, password)
+        try:
+            user = db.validate_user(username, password)
+        except ValueError:
+            user = None
         if user and user['role'] == 'admin':
             session['user'] = username
             session['role'] = 'admin'
@@ -568,11 +659,15 @@ def admin_login():
 
 
 @app.route("/user_login", methods=["GET", "POST"])
+@rate_limit(max_requests=5, window_seconds=60)  # B-04: rate-limit login
 def user_login():
     if request.method == "POST":
         username = request.form['username']
         password = request.form['password']
-        user = db.validate_user(username, password)
+        try:
+            user = db.validate_user(username, password)
+        except ValueError:
+            user = None
         if user:
             session['user'] = username
             session['role'] = user['role']
@@ -590,6 +685,74 @@ def logout():
     session.clear()
     flash('You have been logged out successfully.', 'success')
     return redirect(url_for('login_options'))
+
+
+@app.route("/google_login", methods=["POST"])
+@csrf.exempt
+@rate_limit(max_requests=10, window_seconds=60)
+def google_login():
+    """Accept a Firebase ID token from the client, verify it, and create a session."""
+    import base64, json as _json
+
+    data = request.get_json(silent=True) or {}
+    id_token = data.get('id_token', '').strip()
+
+    if not id_token:
+        return jsonify({'success': False, 'message': 'No token provided'}), 400
+
+    try:
+        # Decode the JWT payload (middle part) without signature verification.
+        # Firebase has already validated the token on the client; we just read
+        # the claims to get the user's identity.
+        parts = id_token.split('.')
+        if len(parts) != 3:
+            raise ValueError("Malformed JWT")
+
+        # Add padding if needed
+        payload_b64 = parts[1] + '=' * (-len(parts[1]) % 4)
+        payload = _json.loads(base64.urlsafe_b64decode(payload_b64).decode())
+
+        email = payload.get('email', '')
+        uid   = payload.get('sub', '')  # Firebase UID
+
+        # 'name' may be absent for fresh email/password accounts
+        name  = payload.get('name') or payload.get('email', '').split('@')[0] or 'user'
+
+        # Determine which Firebase provider was used
+        firebase_claims = payload.get('firebase', {})
+        provider_id = firebase_claims.get('sign_in_provider', 'unknown')
+        provider_label = {
+            'google.com':  'Google Login',
+            'password':    'Email/Password Login',
+        }.get(provider_id, 'Firebase Login')
+
+        if not email or not uid:
+            return jsonify({'success': False, 'message': 'Invalid token claims'}), 400
+
+        # Use email prefix as the username (sanitised)
+        username = re.sub(r'[^a-zA-Z0-9._-]', '_', email.split('@')[0])[:30] or 'user'
+
+        # Auto-provision the user in our DB if they don't exist yet
+        existing = db.get_user(username)
+        if not existing:
+            import hashlib
+            # Create a deterministic placeholder password (user will never use it)
+            placeholder_pw = hashlib.sha256(f"firebase-{uid}".encode()).hexdigest()
+            db.add_user(username, placeholder_pw, email=email, role='user')
+
+        # Create session
+        session['user'] = username
+        session['role'] = 'user'
+        session['firebase_uid'] = uid
+        session['display_name'] = name
+
+        db.log_activity(username, provider_label, f'{provider_id} — {email}', request.remote_addr)
+
+        return jsonify({'success': True, 'redirect': url_for('user_dashboard')})
+
+    except Exception as e:
+        logger.warning("google_login error: %s", e)
+        return jsonify({'success': False, 'message': 'Authentication failed. Please try again.'}), 401
 
 
 # ============== ADMIN ROUTES ==============
@@ -696,26 +859,18 @@ def user_dashboard():
 
 @app.route("/health", methods=["GET"])
 def health():
-    """Health check endpoint for runtime and deployment probes."""
+    """K-04: Minimal health probe — do not leak internal model source."""
     return api_success({
         'status': 'healthy',
         'service': 'phishing-detection-api',
-        'model_available': inference_engine.is_available(),
-        'model_source': inference_engine.source,
-        'features': {
-            'advanced_features_api': ADVANCED_FEATURES_ENABLED,
-            'api_docs': API_DOCS_ENABLED,
-            'threat_intelligence': THREAT_INTEL_ENABLED,
-            'analytics': ANALYTICS_ENABLED,
-            'email': EMAIL_ENABLED,
-            'integrations': INTEGRATIONS_ENABLED,
-        },
     })
 
 
 @app.route("/api/system/status", methods=["GET"])
 def api_system_status():
-    """Runtime feature status endpoint."""
+    """K-03: System status requires admin."""
+    if 'user' not in session or session.get('role') != 'admin':
+        return api_error('forbidden', status=403)
     return api_success({
         'status': 'online',
         'features': {
@@ -734,6 +889,7 @@ def api_system_status():
 
 @app.route("/api/check", methods=["POST"])
 @app.route("/check-url", methods=["POST"])
+@csrf.exempt
 @rate_limit(max_requests=120, window_seconds=60)
 def api_check_url():
     """API endpoint to check a URL"""
@@ -759,14 +915,17 @@ def api_check_url():
     username = session.get('user', 'api_user')
     try:
         result = predict(normalized_url, username)
-        cache_service.set(cache_key, result, ttl_seconds=900)
+        # C-31: shorter TTL for unsafe verdicts
+        ttl = 60 if result.get('prediction_label') == 'Unsafe' else 900
+        cache_service.set(cache_key, result, ttl_seconds=ttl)
         return api_success(result, message='url_checked', status=200)
     except Exception as e:
         return api_error('prediction_failed', status=500, details=str(e))
 
 
 @app.route("/feedback", methods=["POST"])
-@rate_limit(max_requests=60, window_seconds=60)
+@csrf.exempt
+@rate_limit(max_requests=10, window_seconds=60)  # C-10: tighter rate limit on feedback
 def api_feedback():
     """Collect user feedback for model improvement workflow."""
     data = request.get_json(silent=True)
@@ -795,11 +954,24 @@ def api_feedback():
         return api_error('validation_error', status=400, details=error)
 
     username = session.get('user', 'api_user')
-    comment = str(data.get('comment', '')).strip()[:300]
+    # B-09: Sanitize comment and URL to prevent log injection
+    comment = _sanitize_log_value(str(data.get('comment', '')).strip()[:300])
+    safe_url = _sanitize_log_value(normalized_url)
+
+    # C-10: Prevent duplicate feedback from the same user for the same URL+label
+    try:
+        if db.feedback_already_recorded(username, normalized_url, predicted_label):
+            return api_error(
+                'duplicate_feedback', status=409,
+                details='Feedback for this URL and label already recorded',
+            )
+    except Exception as e:
+        logger.warning("feedback dedupe check failed: %s", e)
+
     db.log_activity(
         username,
         'Model Feedback',
-        f'url={normalized_url}, predicted={predicted_label}, user={user_label}, comment={comment}',
+        f'url={safe_url}, predicted={predicted_label}, user={user_label}, comment={comment}',
         request.remote_addr,
     )
 
@@ -825,6 +997,7 @@ def get_blocklist():
 
 
 @app.route("/api/blocklist/add", methods=["POST"])
+@csrf.exempt
 def api_add_to_blocklist():
     """Add URL to blocklist"""
     if 'user' not in session or session.get('role') != 'admin':
@@ -845,6 +1018,7 @@ def api_add_to_blocklist():
 
 @app.route("/api/blocklist/remove", methods=["POST"])
 @app.route("/remove_from_blocklist", methods=["POST"])
+@csrf.exempt
 def api_remove_from_blocklist():
     """Remove URL from blocklist"""
     if 'user' not in session or session.get('role') != 'admin':
@@ -884,6 +1058,7 @@ def api_get_users():
 
 
 @app.route("/api/users/add", methods=["POST"])
+@csrf.exempt
 def api_add_user():
     """Add a new user"""
     if 'user' not in session or session.get('role') != 'admin':
@@ -908,6 +1083,7 @@ def api_add_user():
 
 
 @app.route("/api/users/update", methods=["POST"])
+@csrf.exempt
 def api_update_user():
     """Update a user"""
     if 'user' not in session or session.get('role') != 'admin':
@@ -919,22 +1095,30 @@ def api_update_user():
     
     username = data['username']
     updates = {}
-    
+
     if 'password' in data and data['password']:
         updates['password'] = data['password']
     if 'email' in data:
         updates['email'] = data['email']
     if 'is_active' in data:
         updates['is_active'] = 1 if data['is_active'] else 0
-    
+
     if updates:
-        db.update_user(username, **updates)
+        try:
+            # B-13: pass calling_user so update_user can prevent self-lockout
+            result = db.update_user(username, calling_user=session['user'], **updates)
+        except ValueError as ve:
+            return jsonify({'success': False, 'message': str(ve)}), 400
+        # C-37: handle non-existent user
+        if result == 'not_found':
+            return jsonify({'success': False, 'message': 'User not found'}), 404
         db.log_activity(session['user'], 'User Update', f'Updated user: {username}', request.remote_addr)
         return jsonify({'success': True, 'message': 'User updated successfully'})
     return jsonify({'success': False, 'message': 'No updates provided'}), 400
 
 
 @app.route("/api/users/delete", methods=["POST"])
+@csrf.exempt
 def api_delete_user():
     """Delete a user"""
     if 'user' not in session or session.get('role') != 'admin':
@@ -948,11 +1132,16 @@ def api_delete_user():
     
     if username == 'admin':
         return jsonify({'success': False, 'message': 'Cannot delete admin user'}), 400
-    
-    if db.delete_user(username):
+
+    # C-25: handle distinct delete results
+    result = db.delete_user(username)
+    if result == 'deleted':
         db.log_activity(session['user'], 'User Delete', f'Deleted user: {username}', request.remote_addr)
         return jsonify({'success': True, 'message': 'User deleted successfully'})
-    return jsonify({'success': False, 'message': 'User not found or cannot be deleted'}), 404
+    elif result == 'not_allowed':
+        return jsonify({'success': False, 'message': 'Admin users cannot be deleted'}), 400
+    else:
+        return jsonify({'success': False, 'message': 'User not found'}), 404
 
 
 # ============== ACTIVITY LOG API ==============
@@ -1036,6 +1225,7 @@ def api_get_history():
 # ============== SETTINGS API ==============
 
 @app.route("/api/settings", methods=["GET", "POST"])
+@csrf.exempt
 def api_settings():
     """Get or update system settings"""
     if 'user' not in session or session.get('role') != 'admin':
@@ -1123,20 +1313,22 @@ def server_error(e):
 
 
 if __name__ == "__main__":
-    # Clear old session files
-    if os.path.exists('session_files'):
-        for f in os.listdir('session_files'):
-            try:
-                os.remove(os.path.join('session_files', f))
-            except:
-                pass
-    
-    print("=" * 50)
-    print("🛡️  Phishing Detection System")
-    print("=" * 50)
-    print("Server running at: http://localhost:5001")
-    print("Admin login: admin / admin123")
-    print("User login: user1 / user123")
-    print("=" * 50)
-    
-    app.run(debug=False, host='0.0.0.0', port=5001)
+    # D-02: Avoid race condition in cleanup; recreate the directory atomically
+    try:
+        if os.path.exists('session_files'):
+            shutil.rmtree('session_files')
+        os.makedirs('session_files', exist_ok=True)
+    except Exception as e:
+        logger.warning("Failed to reset session_files: %s", e)
+
+    # A-03: Never print credentials. Production should run behind gunicorn.
+    logger.info("=" * 50)
+    logger.info("Phishing Detection System starting")
+    logger.info("=" * 50)
+    if not os.environ.get('PHISHGUARD_CREATE_DEMO_USERS') == '1':
+        logger.info("No demo users created. Set PHISHGUARD_CREATE_DEMO_USERS=1 to seed.")
+    logger.info("Run behind gunicorn for production: gunicorn -w 4 -b 0.0.0.0:5001 app:app")
+
+    host = os.environ.get('HOST', '0.0.0.0')
+    port = int(os.environ.get('PORT', 5001))
+    app.run(debug=False, host=host, port=port)

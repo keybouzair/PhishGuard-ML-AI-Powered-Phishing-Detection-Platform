@@ -1,24 +1,25 @@
 // Phishing Detector Browser Extension - Popup Script
 
-const API_BASE_URL = 'http://localhost:5000';
+let API_BASE_URL = 'http://localhost:5001';
+let API_KEY = '';
 
 // DOM Elements
-const currentUrlEl = document.getElementById('currentUrl');
-const statusIcon = document.getElementById('statusIcon');
-const statusText = document.getElementById('statusText');
-const statusScore = document.getElementById('statusScore');
-const checkBtn = document.getElementById('checkBtn');
-const checkUrlBtn = document.getElementById('checkUrlBtn');
-const urlInput = document.getElementById('urlInput');
-const details = document.getElementById('details');
-const riskBar = document.getElementById('riskBar');
-const riskFill = document.getElementById('riskFill');
-const autoScan = document.getElementById('autoScan');
-const showNotifications = document.getElementById('showNotifications');
-const totalScans = document.getElementById('totalScans');
-const safeCount = document.getElementById('safeCount');
-const blockedCount = document.getElementById('blockedCount');
-const openDashboard = document.getElementById('openDashboard');
+let currentUrlEl;
+let statusIcon;
+let statusText;
+let statusScore;
+let checkBtn;
+let checkUrlBtn;
+let urlInput;
+let details;
+let riskBar;
+let riskFill;
+let autoScan;
+let showNotifications;
+let totalScans;
+let safeCount;
+let blockedCount;
+let openDashboard;
 
 // Status configurations
 const STATUS = {
@@ -56,6 +57,29 @@ const STATUS = {
 
 // Initialize popup
 document.addEventListener('DOMContentLoaded', async () => {
+    // Assign DOM Elements
+    currentUrlEl = document.getElementById('currentUrl');
+    statusIcon = document.getElementById('statusIcon');
+    statusText = document.getElementById('statusText');
+    statusScore = document.getElementById('statusScore');
+    checkBtn = document.getElementById('checkBtn');
+    checkUrlBtn = document.getElementById('checkUrlBtn');
+    urlInput = document.getElementById('urlInput');
+    details = document.getElementById('details');
+    riskBar = document.getElementById('riskBar');
+    riskFill = document.getElementById('riskFill');
+    autoScan = document.getElementById('autoScan');
+    showNotifications = document.getElementById('showNotifications');
+    totalScans = document.getElementById('totalScans');
+    safeCount = document.getElementById('safeCount');
+    blockedCount = document.getElementById('blockedCount');
+    openDashboard = document.getElementById('openDashboard');
+
+    // Load configuration
+    const config = await chrome.storage.sync.get(['apiBaseUrl', 'apiKey']);
+    API_BASE_URL = config.apiBaseUrl || '';
+    API_KEY = config.apiKey || '';
+
     // Load settings
     const settings = await chrome.storage.local.get(['autoScan', 'showNotifications', 'stats']);
     autoScan.checked = settings.autoScan || false;
@@ -79,48 +103,49 @@ document.addEventListener('DOMContentLoaded', async () => {
             displayResult(cache.urlCache[tab.url]);
         }
     }
-});
 
-// Check current page
-checkBtn.addEventListener('click', async () => {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tab && tab.url) {
-        await checkUrl(tab.url);
-    }
-});
+    // Check current page
+    checkBtn.addEventListener('click', async () => {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (tab && tab.url) {
+            await checkUrl(tab.url);
+        }
+    });
 
-// Check entered URL
-checkUrlBtn.addEventListener('click', async () => {
-    const url = urlInput.value.trim();
-    if (url) {
-        await checkUrl(url);
-    }
-});
-
-// Enter key for URL input
-urlInput.addEventListener('keypress', async (e) => {
-    if (e.key === 'Enter') {
+    // Check entered URL
+    checkUrlBtn.addEventListener('click', async () => {
         const url = urlInput.value.trim();
         if (url) {
             await checkUrl(url);
         }
-    }
-});
+    });
 
-// Save settings
-autoScan.addEventListener('change', () => {
-    chrome.storage.local.set({ autoScan: autoScan.checked });
-    chrome.runtime.sendMessage({ type: 'settingsChanged', autoScan: autoScan.checked });
-});
+    // Enter key for URL input
+    urlInput.addEventListener('keypress', async (e) => {
+        if (e.key === 'Enter') {
+            const url = urlInput.value.trim();
+            if (url) {
+                await checkUrl(url);
+            }
+        }
+    });
 
-showNotifications.addEventListener('change', () => {
-    chrome.storage.local.set({ showNotifications: showNotifications.checked });
-});
+    // Save settings
+    autoScan.addEventListener('change', () => {
+        chrome.storage.local.set({ autoScan: autoScan.checked });
+        chrome.runtime.sendMessage({ type: 'settingsChanged', autoScan: autoScan.checked });
+    });
 
-// Open dashboard
-openDashboard.addEventListener('click', (e) => {
-    e.preventDefault();
-    chrome.tabs.create({ url: `${API_BASE_URL}/user_dashboard` });
+    showNotifications.addEventListener('change', () => {
+        chrome.storage.local.set({ showNotifications: showNotifications.checked });
+    });
+
+    // Open dashboard
+    openDashboard.addEventListener('click', (e) => {
+        e.preventDefault();
+        const base = API_BASE_URL || 'http://localhost:5001';
+        chrome.tabs.create({ url: `${base}/user_dashboard` });
+    });
 });
 
 // Check URL function
@@ -128,13 +153,33 @@ async function checkUrl(url) {
     setStatus('checking');
     checkBtn.disabled = true;
     checkUrlBtn.disabled = true;
+
+    // Prompt if API_BASE_URL is not set
+    if (!API_BASE_URL) {
+        const inputUrl = prompt("Please enter the PhishGuard API Base URL:", "http://localhost:5001");
+        if (inputUrl) {
+            API_BASE_URL = inputUrl.trim();
+            await chrome.storage.sync.set({ apiBaseUrl: API_BASE_URL });
+        } else {
+            setStatus('error');
+            statusScore.textContent = 'API Base URL is required to check URLs.';
+            checkBtn.disabled = false;
+            checkUrlBtn.disabled = false;
+            return;
+        }
+    }
     
     try {
-        const response = await fetch(`${API_BASE_URL}/api/check_url`, {
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        if (API_KEY) {
+            headers['Authorization'] = `Bearer ${API_KEY}`;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/api/check`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: headers,
             body: JSON.stringify({ url })
         });
         

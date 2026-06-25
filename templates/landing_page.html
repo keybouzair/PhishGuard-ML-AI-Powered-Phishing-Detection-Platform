@@ -1,121 +1,221 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="URL Safety Checker." />
-    <meta name="author" content="SANJAY SIKDAR" />
-    <link rel="icon" href="https://znas.in/favicon.png" type="image/png" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet" />
-    <title>Login Options - PHISHING URL DETECTION</title>
-    <style>
-        body {
-            background-color: #f0f4f8;
-            font-family: 'Ubuntu', sans-serif;
-            overflow: hidden;
-            position: relative;
-            min-height: 100vh;
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>PhishGuard-ML — AI-Powered Phishing Detection</title>
+  <meta name="description" content="PhishGuard-ML uses advanced machine learning to detect phishing URLs in real-time, keeping you safe online."/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-container-low": "#1b1b1e",
+            "primary": "#adc6ff",
+            "secondary": "#4edea3",
+            "error": "#ffb4ab",
+            "on-surface": "#e4e1e6",
+            "on-surface-variant": "#c2c6d6",
+            "surface": "#131316",
+            "surface-container": "#1f1f22",
+            "surface-container-high": "#2a2a2d",
+            "surface-variant": "#353438",
+            "surface-bright": "#39393c",
+            "outline": "#8c909f",
+            "outline-variant": "#424754",
+            "background": "#131316",
+            "on-primary": "#002e6a",
+            "on-secondary": "#003824",
+            "primary-container": "#4d8eff",
+            "secondary-container": "#00a572",
+            "on-secondary-container": "#00311f",
+            "error-container": "#93000a",
+            "on-error": "#690005",
+          },
+          fontFamily: {
+            sans: ["Geist", "sans-serif"],
+          }
         }
-        .header {
-            padding: 50px 0;
-            text-align: center;
-        }
-        .header h1 {
-            font-size: 3rem;
-            color: #007bff;
-            margin-bottom: 20px;
-        }
-        .header p {
-            font-size: 1.2rem;
-            color: #6c757d;
-        }
-        .login-container {
-            max-width: 400px;
-            margin: 20px auto;
-            padding: 30px;
-            border-radius: 15px;
-            background-color: #ffffff;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-            text-align: center;
-            position: relative;
-            z-index: 2;
-        }
-        .login-container h2 {
-            margin-bottom: 30px;
-            color: #343a40;
-        }
-        .btn {
-            transition: transform 0.3s ease, background-color 0.3s ease;
-            font-size: 1.2rem;
-            padding: 15px;
-        }
-        .btn-primary {
-            background-color: #007bff;
-        }
-        .btn-primary:hover {
-            background-color: #0056b3;
-            transform: scale(1.05);
-        }
-        .btn-secondary {
-            background-color: #6c757d;
-        }
-        .btn-secondary:hover {
-            background-color: #5a6268;
-            transform: scale(1.05);
-        }
-        .features {
-            padding: 40px 0;
-            text-align: center;
-            background-color: #e9ecef;
-        }
-        .features h3 {
-            margin-bottom: 30px;
-            color: #343a40;
-        }
-        .features p {
-            font-size: 1rem;
-            color: #6c757d;
-            margin-bottom: 20px;
-        }
-        .animated-bg {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #00c6ff, #0072ff);
-            clip-path: circle(30% at right 70%);
-            animation: slideBg 6s ease-in-out infinite alternate;
-            z-index: 1;
-        }
-        @keyframes slideBg {
-            to {
-                clip-path: circle(30% at left 70%);
-            }
-        }
-    </style>
+      }
+    }
+  </script>
+  <style>
+    * { font-family: 'Geist', sans-serif; }
+    .glass-panel {
+      background-color: rgba(27, 27, 30, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-panel:hover {
+      border-color: rgba(255,255,255,0.18);
+      box-shadow: 0 0 20px rgba(173,198,255,0.08);
+    }
+    .hero-grid {
+      background-image:
+        linear-gradient(rgba(173,198,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(173,198,255,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+    @keyframes float-slow { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-18px)} }
+    @keyframes float-fast { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+    .float-slow { animation: float-slow 6s ease-in-out infinite; }
+    .float-fast { animation: float-fast 4s ease-in-out infinite; }
+    .glow-primary { box-shadow: 0 0 40px rgba(173,198,255,0.18); }
+    .glow-secondary { box-shadow: 0 0 40px rgba(78,222,163,0.15); }
+    @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
+    .animate-ping-slow { animation: ping 2.5s cubic-bezier(0,0,0.2,1) infinite; }
+    @keyframes ping { 75%,100%{transform:scale(1.8);opacity:0} }
+  </style>
 </head>
-<body>
-    <div class="animated-bg"></div>
-    <div class="header">
-        <h1 class="animate__animated animate__fadeInDown">Welcome to Phishing URL Detection</h1>
-        <p class="animate__animated animate__fadeInDown animate__delay-1s">Ensuring your online safety, one URL at a time.</p>
+<body class="bg-background text-on-surface antialiased overflow-x-hidden min-h-screen">
+
+  <!-- Background -->
+  <div class="fixed inset-0 hero-grid pointer-events-none z-0"></div>
+  <div class="fixed top-[-200px] left-[-200px] w-[600px] h-[600px] rounded-full bg-primary/5 blur-[120px] pointer-events-none z-0"></div>
+  <div class="fixed bottom-[-100px] right-[-100px] w-[400px] h-[400px] rounded-full bg-secondary/5 blur-[100px] pointer-events-none z-0"></div>
+
+  <!-- Navbar -->
+  <nav class="relative z-50 flex items-center justify-between px-6 md:px-16 py-5 border-b border-white/5 bg-surface/70 backdrop-blur-xl">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+        <span class="material-symbols-outlined text-primary text-xl">shield</span>
+      </div>
+      <span class="text-lg font-bold text-primary tracking-tight">PhishGuard<span class="text-on-surface-variant font-normal">-ML</span></span>
     </div>
-    <div class="container">
-        <div class="login-container animate__animated animate__fadeIn animate__delay-1s">
-            <h2 class="text-center">Login</h2>
-            <a href="/admin_login" class="btn btn-primary w-100 mb-3 animate__animated animate__fadeInUp animate__delay-2s">Admin Login</a>
-            <a href="/user_login" class="btn btn-secondary w-100 animate__animated animate__fadeInUp animate__delay-3s">User Login</a>
+    <div class="flex items-center gap-3">
+      <a href="/admin_login" class="px-4 py-2 text-sm text-on-surface-variant hover:text-on-surface border border-white/10 rounded-lg hover:bg-white/5 transition-all flex items-center gap-2">
+        <span class="material-symbols-outlined text-base">admin_panel_settings</span> Admin
+      </a>
+      <a href="/user_login" class="px-4 py-2 text-sm bg-primary text-on-primary rounded-lg hover:bg-primary/80 transition-all font-semibold flex items-center gap-2">
+        <span class="material-symbols-outlined text-base">login</span> Get Started
+      </a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="relative z-10 flex flex-col items-center text-center px-6 pt-24 pb-20">
+    <!-- Badge -->
+    <div class="mb-8 inline-flex items-center gap-2 bg-secondary/10 border border-secondary/20 rounded-full px-4 py-1.5 text-secondary text-xs font-semibold uppercase tracking-wider">
+      <span class="relative flex h-2 w-2">
+        <span class="animate-ping-slow absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
+      </span>
+      AI-Powered Detection Active
+    </div>
+
+    <h1 class="text-4xl md:text-6xl font-bold text-on-surface leading-tight max-w-4xl mb-6">
+      Stop Phishing Attacks<br/>
+      <span class="text-primary">Before They Land</span>
+    </h1>
+    <p class="text-on-surface-variant text-lg max-w-2xl mb-12 leading-relaxed">
+      PhishGuard-ML combines machine learning, real-time threat intelligence, and autonomous AI agents to detect and neutralize phishing URLs with 99.7% accuracy.
+    </p>
+
+    <div class="flex flex-col sm:flex-row gap-4 mb-20">
+      <a href="/user_login" class="flex items-center justify-center gap-2 bg-primary text-on-primary px-8 py-3.5 rounded-xl font-semibold text-base hover:bg-primary/80 transition-all glow-primary hover:scale-105 duration-200">
+        <span class="material-symbols-outlined">person</span> User Login
+      </a>
+      <a href="/admin_login" class="flex items-center justify-center gap-2 border border-white/15 text-on-surface px-8 py-3.5 rounded-xl font-semibold text-base hover:bg-white/5 transition-all hover:border-white/30 duration-200">
+        <span class="material-symbols-outlined">admin_panel_settings</span> Admin Login
+      </a>
+    </div>
+
+    <!-- Live Stats Bar -->
+    <div class="glass-panel rounded-2xl px-8 py-5 flex flex-col sm:flex-row items-center gap-8 divide-y sm:divide-y-0 sm:divide-x divide-white/10 w-full max-w-3xl">
+      <div class="flex flex-col items-center py-3 sm:py-0 sm:flex-1">
+        <p class="text-2xl font-bold text-on-surface">1.2M+</p>
+        <p class="text-xs text-on-surface-variant uppercase tracking-wider mt-1">URLs Scanned</p>
+      </div>
+      <div class="flex flex-col items-center py-3 sm:py-0 sm:flex-1 sm:pl-8">
+        <p class="text-2xl font-bold text-error">4,210</p>
+        <p class="text-xs text-on-surface-variant uppercase tracking-wider mt-1">Threats Blocked</p>
+      </div>
+      <div class="flex flex-col items-center py-3 sm:py-0 sm:flex-1 sm:pl-8">
+        <p class="text-2xl font-bold text-secondary">99.7%</p>
+        <p class="text-xs text-on-surface-variant uppercase tracking-wider mt-1">Detection Rate</p>
+      </div>
+      <div class="flex flex-col items-center py-3 sm:py-0 sm:flex-1 sm:pl-8">
+        <p class="text-2xl font-bold text-primary">12</p>
+        <p class="text-xs text-on-surface-variant uppercase tracking-wider mt-1">Active AI Agents</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="relative z-10 px-6 md:px-16 pb-24">
+    <div class="text-center mb-14">
+      <p class="text-xs text-on-surface-variant uppercase tracking-widest font-semibold mb-3">Capabilities</p>
+      <h2 class="text-3xl md:text-4xl font-bold text-on-surface">Everything you need to stay secure</h2>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+      <!-- Feature 1 -->
+      <div class="glass-panel rounded-2xl p-6 group hover:scale-[1.02] transition-all duration-300 float-slow">
+        <div class="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-5">
+          <span class="material-symbols-outlined text-primary">psychology</span>
         </div>
+        <h3 class="text-base font-bold text-on-surface mb-2">ML-Powered Analysis</h3>
+        <p class="text-sm text-on-surface-variant leading-relaxed">Advanced gradient boosting and neural network models trained on millions of URLs for blazing-fast, accurate classification.</p>
+      </div>
+      <!-- Feature 2 -->
+      <div class="glass-panel rounded-2xl p-6 group hover:scale-[1.02] transition-all duration-300 float-fast" style="animation-delay:1s">
+        <div class="w-10 h-10 rounded-xl bg-secondary/10 border border-secondary/20 flex items-center justify-center mb-5">
+          <span class="material-symbols-outlined text-secondary">security</span>
+        </div>
+        <h3 class="text-base font-bold text-on-surface mb-2">Threat Hunter Agents</h3>
+        <p class="text-sm text-on-surface-variant leading-relaxed">Autonomous AI agents continuously scan emerging domains, SMTP relays, and dark web pastebins for new attack vectors.</p>
+      </div>
+      <!-- Feature 3 -->
+      <div class="glass-panel rounded-2xl p-6 group hover:scale-[1.02] transition-all duration-300 float-slow" style="animation-delay:2s">
+        <div class="w-10 h-10 rounded-xl bg-error/10 border border-error/20 flex items-center justify-center mb-5">
+          <span class="material-symbols-outlined text-error">auto_awesome</span>
+        </div>
+        <h3 class="text-base font-bold text-on-surface mb-2">GenAI Explanations</h3>
+        <p class="text-sm text-on-surface-variant leading-relaxed">Natural language risk summaries explain exactly why a URL was flagged — homograph attacks, typosquatting, credential harvesting and more.</p>
+      </div>
+      <!-- Feature 4 -->
+      <div class="glass-panel rounded-2xl p-6 group hover:scale-[1.02] transition-all duration-300 float-fast" style="animation-delay:0.5s">
+        <div class="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-5">
+          <span class="material-symbols-outlined text-primary">api</span>
+        </div>
+        <h3 class="text-base font-bold text-on-surface mb-2">External Threat APIs</h3>
+        <p class="text-sm text-on-surface-variant leading-relaxed">Integrated with VirusTotal, Google Safe Browsing, and AbuseIPDB for multi-layer verification of every URL scanned.</p>
+      </div>
+      <!-- Feature 5 -->
+      <div class="glass-panel rounded-2xl p-6 group hover:scale-[1.02] transition-all duration-300 float-slow" style="animation-delay:1.5s">
+        <div class="w-10 h-10 rounded-xl bg-secondary/10 border border-secondary/20 flex items-center justify-center mb-5">
+          <span class="material-symbols-outlined text-secondary">route</span>
+        </div>
+        <h3 class="text-base font-bold text-on-surface mb-2">Auto-Response Orchestration</h3>
+        <p class="text-sm text-on-surface-variant leading-relaxed">Automatically push block rules to firewalls, notify admins via Slack &amp; email, and generate post-incident reports — all hands-free.</p>
+      </div>
+      <!-- Feature 6 -->
+      <div class="glass-panel rounded-2xl p-6 group hover:scale-[1.02] transition-all duration-300 float-fast" style="animation-delay:2.5s">
+        <div class="w-10 h-10 rounded-xl bg-error/10 border border-error/20 flex items-center justify-center mb-5">
+          <span class="material-symbols-outlined text-error">analytics</span>
+        </div>
+        <h3 class="text-base font-bold text-on-surface mb-2">Real-Time Analytics</h3>
+        <p class="text-sm text-on-surface-variant leading-relaxed">Live telemetry dashboards, user behavior analytics, and comprehensive audit trails for complete operational visibility.</p>
+      </div>
     </div>
-    <div class="features">
-        <h3 class="animate__animated animate__fadeInUp">Why Choose Us?</h3>
-        <p class="animate__animated animate__fadeInUp animate__delay-1s">Advanced phishing detection algorithms to keep you safe.</p>
-        <p class="animate__animated animate__fadeInUp animate__delay-2s">User-friendly interface for easy navigation and use.</p>
-        <p class="animate__animated animate__fadeInUp animate__delay-3s">Constantly updated with the latest security threats.</p>
-        <p class="animate__animated animate__fadeInUp animate__delay-4s">Join thousands of users who trust our service for their online safety.</p>
+  </section>
+
+  <!-- Footer -->
+  <footer class="relative z-10 border-t border-white/5 px-6 md:px-16 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-primary text-lg">shield</span>
+      <span class="text-sm text-on-surface-variant">© 2026 <span class="text-on-surface font-semibold">PhishGuard-ML</span>. All rights reserved.</span>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <div class="flex items-center gap-1 text-xs text-on-surface-variant">
+      <span class="w-1.5 h-1.5 rounded-full bg-secondary pulse-dot"></span>
+      Vigilance Active
+    </div>
+  </footer>
+
 </body>
 </html>

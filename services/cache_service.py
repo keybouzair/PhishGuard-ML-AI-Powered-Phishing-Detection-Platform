@@ -7,6 +7,8 @@ import os
 import time
 from typing import Any
 
+from collections import OrderedDict
+
 try:
     import redis  # type: ignore
 except Exception:  # pragma: no cover
@@ -16,7 +18,7 @@ except Exception:  # pragma: no cover
 class CacheService:
     def __init__(self):
         self._redis = None
-        self._mem: dict[str, tuple[float, Any]] = {}
+        self._mem: OrderedDict[str, tuple[float, Any]] = OrderedDict()
 
         redis_url = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
         if redis is not None:
@@ -41,6 +43,8 @@ class CacheService:
         if time.time() > expires_at:
             self._mem.pop(key, None)
             return None
+        # Mark as recently used by moving to end
+        self._mem.move_to_end(key)
         return value
 
     def set(self, key: str, value: Any, ttl_seconds: int = 900):
@@ -50,6 +54,12 @@ class CacheService:
                 return
             except Exception:
                 pass
+
+        # B-02: Enforce LRU cap of 10,000 entries
+        if key in self._mem:
+            self._mem.pop(key)
+        elif len(self._mem) >= 10000:
+            self._mem.popitem(last=False)
 
         self._mem[key] = (time.time() + ttl_seconds, value)
 

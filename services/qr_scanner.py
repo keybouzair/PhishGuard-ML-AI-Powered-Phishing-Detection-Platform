@@ -73,7 +73,7 @@ class QRScannerService:
             return urls
             
     def _extract_images_from_pdf(self, pdf_data: bytes) -> List[bytes]:
-        """Extract embedded image streams from a PDF document."""
+        """Extract embedded image streams from a PDF document with page/image safety caps (B-16)."""
         if not fitz:
             logger.error("PDF processing unavailable (PyMuPDF missing)")
             return []
@@ -82,16 +82,27 @@ class QRScannerService:
         try:
             # Load PDF from memory safely
             doc = fitz.open(stream=pdf_data, filetype="pdf")
-            for page_num in range(len(doc)):
+            
+            # Cap PDF parsing at 10 pages (B-16)
+            max_pages = min(len(doc), 10)
+            total_images = 0
+            max_images = 50
+
+            for page_num in range(max_pages):
+                if total_images >= max_images:
+                    break
                 page = doc.load_page(page_num)
                 # Ensure we handle multiple images per page
                 images = page.get_images(full=True)
                 for img_info in images:
+                    if total_images >= max_images:
+                        break
                     xref = img_info[0]
                     base_image = doc.extract_image(xref)
                     image_bytes = base_image["image"]
                     if image_bytes:
                         image_bytes_list.append(image_bytes)
+                        total_images += 1
             return image_bytes_list
         except Exception as e:
             logger.error(f"Error parsing PDF: {e}")
@@ -119,8 +130,20 @@ class QRScannerService:
         filename_lower = filename.lower()
         extracted_urls = []
         
-        # Determine file handling based on extension signature
+        # B-16: Magic-byte validation to prevent extension spoofing
+        is_pdf = file_data.startswith(b'%PDF-')
+        is_png = file_data.startswith(b'\x89PNG\r\n\x1a\n')
+        is_jpeg = file_data.startswith(b'\xff\xd8\xff')
+        is_webp = file_data.startswith(b'RIFF') and len(file_data) > 12 and file_data[8:12] == b'WEBP'
+
+        # Determine file handling based on extension signature and magic bytes
         if filename_lower.endswith('.pdf'):
+            if not is_pdf:
+                return {
+                    "status": "error",
+                    "message": "Magic bytes mismatch: file is not a valid PDF document.",
+                    "urls_found": []
+                }
             logger.info(f"Processing PDF file for Quishing: {filename}")
             images = self._extract_images_from_pdf(file_data)
             for img_bytes in images:
@@ -128,10 +151,19 @@ class QRScannerService:
                  extracted_urls.extend(urls)
                  
         elif filename_lower.endswith(('.png', '.jpg', '.jpeg', '.webp')):
+             if filename_lower.endswith('.png') and not is_png:
+                 return {"status": "error", "message": "Magic bytes mismatch: file is not a valid PNG image.", "urls_found": []}
+             if filename_lower.endswith(('.jpg', '.jpeg')) and not is_jpeg:
+                 return {"status": "error", "message": "Magic bytes mismatch: file is not a valid JPEG image.", "urls_found": []}
+             if filename_lower.endswith('.webp') and not is_webp:
+                 return {"status": "error", "message": "Magic bytes mismatch: file is not a valid WEBP image.", "urls_found": []}
+             if not (is_png or is_jpeg or is_webp):
+                 return {"status": "error", "message": "Magic bytes mismatch: unsupported image format.", "urls_found": []}
+
              logger.info(f"Processing Image file for Quishing: {filename}")
              urls = self._decode_image_bytes(file_data)
              extracted_urls.extend(urls)
-             
+              
         else:
              return {
                  "status": "error",

@@ -269,6 +269,23 @@
             }
         });
     </script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-analytics.js";
+    const firebaseConfig = {
+      apiKey: "AIzaSyCYEtd17LMqAsCmpX5gCr-u4FHIE3a4Otw",
+      authDomain: "ml-phi.firebaseapp.com",
+      projectId: "ml-phi",
+      storageBucket: "ml-phi.firebasestorage.app",
+      messagingSenderId: "810106830376",
+      appId: "1:810106830376:web:64a2333f7cbaeafd10ff1d",
+      measurementId: "G-YM1DGWVLFH"
+    };
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+  </script>
 </body>
+
 
 </html>

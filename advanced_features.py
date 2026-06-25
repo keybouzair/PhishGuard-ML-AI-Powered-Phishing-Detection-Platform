@@ -72,23 +72,27 @@ class BrowserExtensionManager:
     
     def register_session(self, session_id: str, extension_version: str,
                         browser_type: str, os_type: str, user_id: str = None) -> Dict:
-        """Register a browser extension session"""
+        """Register a browser extension session with capped field sizes (D-19)"""
+        session_id = str(session_id)[:100] if session_id else ""
+        extension_version = str(extension_version)[:50] if extension_version else ""
+        browser_type = str(browser_type)[:100] if browser_type else ""
+        os_type = str(os_type)[:100] if os_type else ""
+        user_id = str(user_id)[:100] if user_id else None
+
         try:
             conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
-            cursor.execute('''
-                INSERT OR REPLACE INTO browser_sessions 
-                (session_id, extension_version, browser_type, os_type, user_id, last_activity)
-                VALUES (?, ?, ?, ?, ?, ?)
-            ''', (session_id, extension_version, browser_type, os_type, user_id, datetime.now()))
-            
-            cursor.execute('''
-                INSERT OR IGNORE INTO extension_stats (session_id)
-                VALUES (?)
-            ''', (session_id,))
-            
-            conn.commit()
+            with conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    INSERT OR REPLACE INTO browser_sessions 
+                    (session_id, extension_version, browser_type, os_type, user_id, last_activity)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ''', (session_id, extension_version, browser_type, os_type, user_id, datetime.now()))
+                
+                cursor.execute('''
+                    INSERT OR IGNORE INTO extension_stats (session_id)
+                    VALUES (?)
+                ''', (session_id,))
             conn.close()
             
             return {
@@ -100,31 +104,40 @@ class BrowserExtensionManager:
             return {'status': 'error', 'message': str(e)}
     
     def log_extension_action(self, session_id: str, action: str, url: str, result: str):
-        """Log browser extension action"""
+        """Log browser extension action securely within a transaction (C-07) and cap field lengths (D-19)"""
+        session_id = str(session_id)[:100] if session_id else ""
+        action = str(action)[:100] if action else ""
+        url = str(url)[:2048] if url else ""
+        result = str(result)[:100] if result else ""
+
         try:
             conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
-            cursor.execute('''
-                INSERT INTO extension_logs (session_id, action, url, result)
-                VALUES (?, ?, ?, ?)
-            ''', (session_id, action, url, result))
-            
-            # Update session activity
-            cursor.execute('''
-                UPDATE browser_sessions SET last_activity = ? WHERE session_id = ?
-            ''', (datetime.now(), session_id))
-            
-            # Update stats
-            if action == 'check_url':
-                if result == 'phishing':
-                    cursor.execute('UPDATE extension_stats SET phishing_found = phishing_found + 1 WHERE session_id = ?', (session_id,))
-                elif result == 'safe':
-                    cursor.execute('UPDATE extension_stats SET safe_urls = safe_urls + 1 WHERE session_id = ?', (session_id,))
+            with conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    INSERT INTO extension_logs (session_id, action, url, result)
+                    VALUES (?, ?, ?, ?)
+                ''', (session_id, action, url, result))
                 
-                cursor.execute('UPDATE extension_stats SET urls_checked = urls_checked + 1 WHERE session_id = ?', (session_id,))
-            
-            conn.commit()
+                # Update session activity
+                cursor.execute('''
+                    UPDATE browser_sessions SET last_activity = ? WHERE session_id = ?
+                ''', (datetime.now(), session_id))
+                
+                # Ensure stats entry exists (UPSERT fallback)
+                cursor.execute('''
+                    INSERT OR IGNORE INTO extension_stats (session_id, urls_checked, phishing_found, safe_urls)
+                    VALUES (?, 0, 0, 0)
+                ''', (session_id,))
+                
+                # Update stats
+                if action == 'check_url':
+                    if result == 'phishing':
+                        cursor.execute('UPDATE extension_stats SET phishing_found = phishing_found + 1 WHERE session_id = ?', (session_id,))
+                    elif result == 'safe':
+                        cursor.execute('UPDATE extension_stats SET safe_urls = safe_urls + 1 WHERE session_id = ?', (session_id,))
+                    
+                    cursor.execute('UPDATE extension_stats SET urls_checked = urls_checked + 1 WHERE session_id = ?', (session_id,))
             conn.close()
             
             return True
@@ -398,7 +411,9 @@ class ReportGenerator:
         </html>
         '''
         
-        template = Template(html_template)
+        from jinja2 import Environment, select_autoescape
+        env = Environment(autoescape=select_autoescape(['html', 'xml']))
+        template = env.from_string(html_template)
         return template.render(
             title=title,
             date=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
@@ -690,13 +705,16 @@ class AdvancedSIEMIntegration:
             'sourcetype': 'phishing_detection'
         }
         
+        # B-01: Remove verify=False by default; allow insecure fallback only via env var
+        verify_ssl = os.environ.get('SPLUNK_HEC_INSECURE') != '1'
+        
         try:
             response = requests.post(
                 f'{url}/services/collector',
                 json=payload,
                 headers={'Authorization': f'Splunk {token}'},
                 timeout=10,
-                verify=False
+                verify=verify_ssl
             )
             return response.status_code == 200
         except:

@@ -1,1247 +1,284 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PhishGuard - Advanced Phishing Detection System</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-    <style>
-        :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --secondary: #8b5cf6;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --dark: #0f0d24;
-            --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            --gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            --gradient-4: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--dark);
-            color: white;
-            overflow-x: hidden;
-        }
-
-        /* Animated Background */
-        .hero-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            background: linear-gradient(180deg, #0f0d24 0%, #1a1640 50%, #0f0d24 100%);
-        }
-
-        .hero-bg::before {
-            content: '';
-            position: absolute;
-            width: 800px;
-            height: 800px;
-            background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
-            top: -300px;
-            right: -200px;
-            animation: float 10s ease-in-out infinite;
-        }
-
-        .hero-bg::after {
-            content: '';
-            position: absolute;
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%);
-            bottom: -200px;
-            left: -200px;
-            animation: float 8s ease-in-out infinite reverse;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(30px, -30px) scale(1.05); }
-        }
-
-        /* Particles */
-        .particles {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            overflow: hidden;
-        }
-
-        .particle {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            animation: rise 15s infinite ease-in;
-        }
-
-        @keyframes rise {
-            0% { transform: translateY(100vh) scale(0); opacity: 0; }
-            50% { opacity: 1; }
-            100% { transform: translateY(-100vh) scale(1); opacity: 0; }
-        }
-
-        /* Navbar */
-        .navbar {
-            padding: 20px 0;
-            background: transparent;
-            transition: all 0.3s ease;
-        }
-
-        .navbar.scrolled {
-            background: rgba(15, 13, 36, 0.95);
-            backdrop-filter: blur(20px);
-            padding: 12px 0;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
-        }
-
-        .navbar-brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-weight: 800;
-            font-size: 1.5rem;
-            color: white !important;
-        }
-
-        .logo-icon {
-            width: 44px;
-            height: 44px;
-            background: var(--gradient-1);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.3rem;
-            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.5);
-        }
-
-        .nav-link {
-            color: rgba(255, 255, 255, 0.8) !important;
-            font-weight: 500;
-            padding: 10px 20px !important;
-            transition: all 0.2s ease;
-        }
-
-        .nav-link:hover {
-            color: white !important;
-        }
-
-        .btn-nav {
-            padding: 10px 24px;
-            border-radius: 10px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .btn-login {
-            background: transparent;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            color: white;
-        }
-
-        .btn-login:hover {
-            border-color: white;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-        }
-
-        .btn-signup {
-            background: var(--gradient-1);
-            border: none;
-            color: white;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
-        }
-
-        .btn-signup:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 25px rgba(99, 102, 241, 0.5);
-            color: white;
-        }
-
-        /* Hero Section */
-        .hero {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            padding: 100px 0;
-            position: relative;
-        }
-
-        .hero-content {
-            max-width: 700px;
-        }
-
-        .hero-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            background: rgba(99, 102, 241, 0.2);
-            border: 1px solid rgba(99, 102, 241, 0.3);
-            border-radius: 50px;
-            font-size: 0.85rem;
-            color: #a5b4fc;
-            margin-bottom: 24px;
-        }
-
-        .hero-badge i {
-            color: var(--success);
-        }
-
-        .hero-title {
-            font-size: 4rem;
-            font-weight: 900;
-            line-height: 1.1;
-            margin-bottom: 24px;
-            letter-spacing: -2px;
-        }
-
-        .hero-title .gradient-text {
-            background: var(--gradient-1);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .hero-subtitle {
-            font-size: 1.25rem;
-            color: rgba(255, 255, 255, 0.6);
-            line-height: 1.8;
-            margin-bottom: 40px;
-        }
-
-        .hero-buttons {
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-
-        .btn-hero {
-            padding: 16px 32px;
-            font-size: 1rem;
-            font-weight: 600;
-            border-radius: 12px;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .btn-primary-hero {
-            background: var(--gradient-1);
-            color: white;
-            border: none;
-            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
-        }
-
-        .btn-primary-hero:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 30px rgba(99, 102, 241, 0.5);
-            color: white;
-        }
-
-        .btn-secondary-hero {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .btn-secondary-hero:hover {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.4);
-            color: white;
-        }
-
-        .hero-visual {
-            position: relative;
-        }
-
-        .hero-image {
-            width: 100%;
-            max-width: 600px;
-            animation: heroFloat 5s ease-in-out infinite;
-        }
-
-        @keyframes heroFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-20px); }
-        }
-
-        .floating-card {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 16px;
-            padding: 16px;
-            animation: cardFloat 4s ease-in-out infinite;
-        }
-
-        .floating-card.card-1 {
-            top: 20%;
-            left: -10%;
-            animation-delay: 0s;
-        }
-
-        .floating-card.card-2 {
-            bottom: 30%;
-            right: -5%;
-            animation-delay: 1s;
-        }
-
-        .floating-card.card-3 {
-            bottom: 10%;
-            left: 5%;
-            animation-delay: 2s;
-        }
-
-        @keyframes cardFloat {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-10px) rotate(2deg); }
-        }
-
-        .floating-card .card-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 8px;
-        }
-
-        .floating-card .card-icon.safe {
-            background: rgba(16, 185, 129, 0.2);
-            color: var(--success);
-        }
-
-        .floating-card .card-icon.danger {
-            background: rgba(239, 68, 68, 0.2);
-            color: var(--danger);
-        }
-
-        .floating-card .card-icon.primary {
-            background: rgba(99, 102, 241, 0.2);
-            color: var(--primary);
-        }
-
-        .floating-card h4 {
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin: 0 0 4px;
-        }
-
-        .floating-card p {
-            font-size: 0.75rem;
-            color: rgba(255, 255, 255, 0.6);
-            margin: 0;
-        }
-
-        /* Stats Section */
-        .stats-section {
-            padding: 80px 0;
-            background: rgba(255, 255, 255, 0.02);
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 30px;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 3.5rem;
-            font-weight: 900;
-            background: var(--gradient-1);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            line-height: 1;
-            margin-bottom: 8px;
-        }
-
-        .stat-label {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 1rem;
-        }
-
-        /* Recent Phishing Section */
-        .recent-phishing-section {
-            padding: 120px 0;
-            background: rgba(255, 255, 255, 0.03);
-        }
-
-        .recent-phishing-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 20px;
-        }
-
-        .phishing-card {
-            background: rgba(15, 13, 36, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 18px;
-            padding: 22px;
-            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
-            transition: transform 0.25s ease, border-color 0.25s ease;
-        }
-
-        .phishing-card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(239, 68, 68, 0.35);
-        }
-
-        .phishing-card-header {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 12px;
-            margin-bottom: 12px;
-        }
-
-        .phishing-url {
-            color: white;
-            font-weight: 700;
-            font-size: 1rem;
-            word-break: break-all;
-            margin-bottom: 6px;
-        }
-
-        .phishing-meta {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 0.9rem;
-        }
-
-        .phishing-score {
-            padding: 6px 12px;
-            border-radius: 999px;
-            background: rgba(239, 68, 68, 0.15);
-            color: #fca5a5;
-            font-size: 0.85rem;
-            font-weight: 700;
-            white-space: nowrap;
-        }
-
-        .phishing-empty {
-            border: 1px dashed rgba(255, 255, 255, 0.15);
-            border-radius: 18px;
-            padding: 32px;
-            text-align: center;
-            color: rgba(255, 255, 255, 0.7);
-            background: rgba(15, 13, 36, 0.45);
-        }
-
-        @media (max-width: 768px) {
-            .recent-phishing-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Features Section */
-        .features-section {
-            padding: 120px 0;
-        }
-
-        .section-header {
-            text-align: center;
-            max-width: 600px;
-            margin: 0 auto 60px;
-        }
-
-        .section-badge {
-            display: inline-block;
-            padding: 6px 16px;
-            background: rgba(99, 102, 241, 0.2);
-            border-radius: 50px;
-            font-size: 0.85rem;
-            color: #a5b4fc;
-            margin-bottom: 16px;
-        }
-
-        .section-title {
-            font-size: 2.5rem;
-            font-weight: 800;
-            margin-bottom: 16px;
-            letter-spacing: -1px;
-        }
-
-        .section-subtitle {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 1.1rem;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 30px;
-        }
-
-        .feature-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 20px;
-            padding: 32px;
-            transition: all 0.3s ease;
-        }
-
-        .feature-card:hover {
-            background: rgba(255, 255, 255, 0.06);
-            border-color: rgba(99, 102, 241, 0.3);
-            transform: translateY(-5px);
-        }
-
-        .feature-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            margin-bottom: 20px;
-        }
-
-        .feature-card:nth-child(1) .feature-icon { background: rgba(99, 102, 241, 0.2); color: var(--primary); }
-        .feature-card:nth-child(2) .feature-icon { background: rgba(16, 185, 129, 0.2); color: var(--success); }
-        .feature-card:nth-child(3) .feature-icon { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
-        .feature-card:nth-child(4) .feature-icon { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
-        .feature-card:nth-child(5) .feature-icon { background: rgba(6, 182, 212, 0.2); color: #06b6d4; }
-        .feature-card:nth-child(6) .feature-icon { background: rgba(139, 92, 246, 0.2); color: var(--secondary); }
-
-        .feature-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: 12px;
-        }
-
-        .feature-desc {
-            color: rgba(255, 255, 255, 0.6);
-            line-height: 1.6;
-        }
-
-        /* How It Works */
-        .how-it-works {
-            padding: 120px 0;
-            background: linear-gradient(180deg, transparent 0%, rgba(99, 102, 241, 0.05) 50%, transparent 100%);
-        }
-
-        .steps-container {
-            display: flex;
-            justify-content: space-between;
-            position: relative;
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        .steps-container::before {
-            content: '';
-            position: absolute;
-            top: 50px;
-            left: 100px;
-            right: 100px;
-            height: 2px;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            opacity: 0.3;
-        }
-
-        .step {
-            text-align: center;
-            position: relative;
-            z-index: 1;
-        }
-
-        .step-number {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            background: var(--gradient-1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            font-weight: 800;
-            margin: 0 auto 24px;
-            box-shadow: 0 10px 40px rgba(99, 102, 241, 0.4);
-        }
-
-        .step-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
-        .step-desc {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 0.95rem;
-            max-width: 200px;
-        }
-
-        /* CTA Section */
-        .cta-section {
-            padding: 120px 0;
-        }
-
-        .cta-card {
-            background: var(--gradient-1);
-            border-radius: 32px;
-            padding: 80px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .cta-card::before {
-            content: '';
-            position: absolute;
-            width: 500px;
-            height: 500px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            top: -250px;
-            right: -100px;
-        }
-
-        .cta-card::after {
-            content: '';
-            position: absolute;
-            width: 300px;
-            height: 300px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            bottom: -150px;
-            left: -50px;
-        }
-
-        .cta-content {
-            position: relative;
-            z-index: 1;
-        }
-
-        .cta-title {
-            font-size: 3rem;
-            font-weight: 800;
-            margin-bottom: 16px;
-            letter-spacing: -1px;
-        }
-
-        .cta-subtitle {
-            font-size: 1.25rem;
-            opacity: 0.9;
-            margin-bottom: 40px;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .cta-buttons {
-            display: flex;
-            gap: 16px;
-            justify-content: center;
-        }
-
-        .btn-cta {
-            padding: 18px 40px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            border-radius: 12px;
-            transition: all 0.3s ease;
-        }
-
-        .btn-cta-white {
-            background: white;
-            color: var(--primary);
-            border: none;
-        }
-
-        .btn-cta-white:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            color: var(--primary);
-        }
-
-        .btn-cta-outline {
-            background: transparent;
-            color: white;
-            border: 2px solid rgba(255, 255, 255, 0.5);
-        }
-
-        .btn-cta-outline:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: white;
-            color: white;
-        }
-
-        /* Footer */
-        .footer {
-            padding: 60px 0 30px;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .footer-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr;
-            gap: 60px;
-            margin-bottom: 60px;
-        }
-
-        .footer-brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 1.5rem;
-            font-weight: 800;
-            margin-bottom: 16px;
-        }
-
-        .footer-desc {
-            color: rgba(255, 255, 255, 0.5);
-            line-height: 1.8;
-            margin-bottom: 24px;
-        }
-
-        .social-links {
-            display: flex;
-            gap: 12px;
-        }
-
-        .social-link {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            transition: all 0.2s ease;
-        }
-
-        .social-link:hover {
-            background: var(--primary);
-            color: white;
-        }
-
-        .footer-title {
-            font-size: 1rem;
-            font-weight: 700;
-            margin-bottom: 20px;
-        }
-
-        .footer-links {
-            list-style: none;
-            padding: 0;
-        }
-
-        .footer-links li {
-            margin-bottom: 12px;
-        }
-
-        .footer-links a {
-            color: rgba(255, 255, 255, 0.5);
-            text-decoration: none;
-            transition: color 0.2s ease;
-        }
-
-        .footer-links a:hover {
-            color: white;
-        }
-
-        .footer-bottom {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-top: 30px;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .footer-copyright {
-            color: rgba(255, 255, 255, 0.4);
-        }
-
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .hero-title {
-                font-size: 3rem;
-            }
-
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .features-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .footer-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .hero-title {
-                font-size: 2.5rem;
-            }
-
-            .hero-buttons {
-                flex-direction: column;
-            }
-
-            .stats-grid,
-            .features-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .steps-container {
-                flex-direction: column;
-                gap: 40px;
-            }
-
-            .steps-container::before {
-                display: none;
-            }
-
-            .cta-card {
-                padding: 40px;
-            }
-
-            .cta-title {
-                font-size: 2rem;
-            }
-
-            .footer-grid {
-                grid-template-columns: 1fr;
-                gap: 40px;
-            }
-
-            .footer-bottom {
-                flex-direction: column;
-                gap: 16px;
-                text-align: center;
-            }
-        }
-
-        /* Animations */
-        .fade-up {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: all 0.6s ease;
-        }
-
-        .fade-up.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    </style>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>PhishGuard-ML — AI-Powered Phishing Detection Platform</title>
+  <meta name="description" content="PhishGuard-ML uses advanced machine learning to detect phishing URLs in real-time, keeping you safe online."/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-container-low": "#1b1b1e",
+            "primary": "#adc6ff",
+            "secondary": "#4edea3",
+            "error": "#ffb4ab",
+            "on-surface": "#e4e1e6",
+            "on-surface-variant": "#c2c6d6",
+            "surface": "#131316",
+            "surface-container": "#1f1f22",
+            "surface-variant": "#353438",
+            "background": "#131316",
+            "on-primary": "#002e6a",
+            "on-secondary": "#003824",
+          },
+          fontFamily: { sans: ["Geist", "sans-serif"] }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { font-family: 'Geist', sans-serif; }
+    .glass-panel {
+      background-color: rgba(27, 27, 30, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-panel:hover { border-color: rgba(255,255,255,0.18); box-shadow: 0 0 20px rgba(173,198,255,0.06); }
+    .hero-grid {
+      background-image:
+        linear-gradient(rgba(173,198,255,0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(173,198,255,0.035) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+    @keyframes float-slow { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-16px)} }
+    @keyframes float-fast { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+    .float-slow { animation: float-slow 6s ease-in-out infinite; }
+    .float-fast { animation: float-fast 4s ease-in-out infinite; }
+    @keyframes ping-slow { 75%,100%{transform:scale(1.8);opacity:0} }
+    .animate-ping-slow { animation: ping-slow 2.5s cubic-bezier(0,0,0.2,1) infinite; }
+    @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
+    @keyframes scan-line {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(100vh); }
+    }
+    .scan-line {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(173,198,255,0.3), transparent);
+      animation: scan-line 8s linear infinite;
+      pointer-events: none;
+      z-index: 5;
+    }
+  </style>
 </head>
-<body>
-    <div class="hero-bg"></div>
-    
-    <!-- Particles -->
-    <div class="particles">
-        <div class="particle" style="left: 10%; animation-delay: 0s;"></div>
-        <div class="particle" style="left: 20%; animation-delay: 2s;"></div>
-        <div class="particle" style="left: 30%; animation-delay: 4s;"></div>
-        <div class="particle" style="left: 40%; animation-delay: 1s;"></div>
-        <div class="particle" style="left: 50%; animation-delay: 3s;"></div>
-        <div class="particle" style="left: 60%; animation-delay: 5s;"></div>
-        <div class="particle" style="left: 70%; animation-delay: 2s;"></div>
-        <div class="particle" style="left: 80%; animation-delay: 4s;"></div>
-        <div class="particle" style="left: 90%; animation-delay: 1s;"></div>
+<body class="bg-background text-on-surface antialiased overflow-x-hidden min-h-screen">
+
+  <!-- Animated scan line -->
+  <div class="scan-line"></div>
+
+  <!-- Background -->
+  <div class="fixed inset-0 hero-grid pointer-events-none z-0"></div>
+  <div class="fixed top-[-250px] left-[-250px] w-[700px] h-[700px] rounded-full bg-primary/5 blur-[150px] pointer-events-none z-0"></div>
+  <div class="fixed bottom-[-150px] right-[-150px] w-[500px] h-[500px] rounded-full bg-secondary/4 blur-[120px] pointer-events-none z-0"></div>
+  <div class="fixed top-[40%] left-[50%] w-[300px] h-[300px] rounded-full bg-error/3 blur-[100px] pointer-events-none z-0 -translate-x-1/2"></div>
+
+  <!-- Navbar -->
+  <nav class="relative z-50 flex items-center justify-between px-6 md:px-16 py-5 border-b border-white/5 bg-surface/70 backdrop-blur-xl">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+        <span class="material-symbols-outlined text-primary text-xl">shield</span>
+      </div>
+      <span class="text-lg font-bold text-primary tracking-tight">PhishGuard<span class="text-on-surface-variant font-normal">-ML</span></span>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="/user_login" class="flex items-center gap-1.5 px-4 py-2 text-sm bg-primary text-on-primary rounded-lg hover:bg-primary/80 transition-all font-semibold">
+        <span class="material-symbols-outlined text-base">login</span> Get Started
+      </a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="relative z-10 flex flex-col items-center text-center px-6 pt-24 pb-20">
+    <!-- Live badge -->
+    <div class="mb-8 inline-flex items-center gap-2 bg-secondary/10 border border-secondary/20 rounded-full px-4 py-1.5 text-secondary text-xs font-semibold uppercase tracking-wider">
+      <span class="relative flex h-2 w-2">
+        <span class="animate-ping-slow absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
+      </span>
+      AI Detection Engine Active
     </div>
 
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg fixed-top">
-        <div class="container">
-            <a class="navbar-brand" href="#">
-                <div class="logo-icon">
-                    <i class="fas fa-shield-halved"></i>
-                </div>
-                PhishGuard
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav mx-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#features">Features</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#how-it-works">How It Works</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/about">About</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/contact">Contact</a>
-                    </li>
-                </ul>
-                <div class="d-flex gap-2">
-                    <a href="/user_login" class="btn btn-nav btn-login">Log In</a>
-                    <a href="/admin_login" class="btn btn-nav btn-signup">Admin Login</a>
-                </div>
-            </div>
+    <h1 class="text-4xl md:text-6xl font-bold text-on-surface leading-tight max-w-4xl mb-6">
+      Outsmart Phishing Attacks<br/>
+      <span class="text-primary">With Machine Learning</span>
+    </h1>
+    <p class="text-on-surface-variant text-base md:text-lg max-w-2xl mb-12 leading-relaxed">
+      PhishGuard-ML combines gradient boosting models, real-time threat intelligence, and autonomous AI agents to detect and neutralize phishing URLs with {{ detection_accuracy }} accuracy.
+    </p>
+
+    <div class="flex flex-col sm:flex-row gap-4 mb-20">
+      <a href="/user_login" class="flex items-center justify-center gap-2 bg-primary text-on-primary px-8 py-3.5 rounded-xl font-semibold text-base hover:bg-primary/80 transition-all hover:scale-[1.02] duration-200 shadow-[0_0_30px_rgba(173,198,255,0.2)]">
+        <span class="material-symbols-outlined">person</span> Start Scanning — Free
+      </a>
+    </div>
+
+    <!-- Live Stats Bar -->
+    <div class="glass-panel rounded-2xl px-6 py-5 grid grid-cols-2 md:grid-cols-4 gap-5 divide-x-0 md:divide-x divide-white/10 w-full max-w-3xl">
+      <div class="flex flex-col items-center py-2">
+        <p class="text-2xl font-bold text-on-surface">{{ urls_analyzed }}</p>
+        <p class="text-[11px] text-on-surface-variant uppercase tracking-wider mt-1 font-semibold">URLs Scanned</p>
+      </div>
+      <div class="flex flex-col items-center py-2 md:pl-5">
+        <p class="text-2xl font-bold text-error">{{ active_users }}</p>
+        <p class="text-[11px] text-on-surface-variant uppercase tracking-wider mt-1 font-semibold">Active Users</p>
+      </div>
+      <div class="flex flex-col items-center py-2 md:pl-5">
+        <p class="text-2xl font-bold text-secondary">{{ detection_accuracy }}</p>
+        <p class="text-[11px] text-on-surface-variant uppercase tracking-wider mt-1 font-semibold">Detection Rate</p>
+      </div>
+      <div class="flex flex-col items-center py-2 md:pl-5">
+        <p class="text-2xl font-bold text-primary">{{ avg_response }}</p>
+        <p class="text-[11px] text-on-surface-variant uppercase tracking-wider mt-1 font-semibold">Avg Response</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Recent Threats (if available) -->
+  {% if recent_phishing_sites and recent_phishing_sites|length > 0 %}
+  <section class="relative z-10 px-6 md:px-16 pb-16">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-base font-bold text-on-surface flex items-center gap-2">
+          <span class="material-symbols-outlined text-error text-lg">warning</span>
+          Recent Threats Blocked
+        </h2>
+        <span class="text-xs text-on-surface-variant bg-error/5 border border-error/15 px-2 py-1 rounded-lg">Live Feed</span>
+      </div>
+      <div class="glass-panel rounded-2xl overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-white/8 bg-surface-container/40">
+                <th class="text-left px-5 py-3 text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Phishing URL</th>
+                <th class="text-left px-5 py-3 text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Status</th>
+                <th class="text-left px-5 py-3 text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Detected</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5">
+              {% for site in recent_phishing_sites %}
+              <tr class="hover:bg-white/3 transition-colors">
+                <td class="px-5 py-3">
+                  <code class="text-xs text-error">{{ site.url[:60] }}{% if site.url|length > 60 %}…{% endif %}</code>
+                </td>
+                <td class="px-5 py-3">
+                  <span class="text-[10px] font-bold bg-error/10 text-error border border-error/20 px-2 py-0.5 rounded-full">Blocked</span>
+                </td>
+                <td class="px-5 py-3 text-xs text-on-surface-variant">{{ site.checked_at if site.checked_at else '—' }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
-    </nav>
+      </div>
+    </div>
+  </section>
+  {% endif %}
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-lg-6">
-                    <div class="hero-content">
-                        <div class="hero-badge animate__animated animate__fadeIn">
-                            <i class="fas fa-check-circle"></i>
-                            Trusted by 10 Users
-                        </div>
-                        <h1 class="hero-title animate__animated animate__fadeInUp">
-                            Protect Against <span class="gradient-text">Phishing</span> Attacks
-                        </h1>
-                        <p class="hero-subtitle animate__animated animate__fadeInUp animate__delay-1s">
-                            Advanced machine learning technology to detect and prevent phishing websites in real-time. Keep your digital life secure with PhishGuard.
-                        </p>
-                        <div class="hero-buttons animate__animated animate__fadeInUp animate__delay-2s">
-                            <a href="/user_login" class="btn btn-hero btn-primary-hero">
-                                <i class="fas fa-rocket"></i>
-                                Get Started Free
-                            </a>
-                            <a href="#features" class="btn btn-hero btn-secondary-hero">
-                                <i class="fas fa-play-circle"></i>
-                                Learn More
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="hero-visual">
-                        <!-- Floating Cards -->
-                        <div class="floating-card card-1">
-                            <div class="card-icon safe">
-                                <i class="fas fa-shield-check"></i>
-                            </div>
-                            <h4>URL Verified</h4>
-                            <p>google.com is safe</p>
-                        </div>
-                        <div class="floating-card card-2">
-                            <div class="card-icon danger">
-                                <i class="fas fa-exclamation-triangle"></i>
-                            </div>
-                            <h4>Threat Detected</h4>
-                            <p>Phishing attempt blocked</p>
-                        </div>
-                        <div class="floating-card card-3">
-                            <div class="card-icon primary">
-                                <i class="fas fa-chart-line"></i>
-                            </div>
-                            <h4>99.2% Accuracy</h4>
-                            <p>ML-powered detection</p>
-                        </div>
-                        <!-- Main Visual SVG -->
-                        <svg class="hero-image" viewBox="0 0 500 400" fill="none">
-                            <rect x="50" y="50" width="400" height="300" rx="20" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)" stroke-width="2"/>
-                            <rect x="70" y="70" width="360" height="40" rx="10" fill="rgba(255,255,255,0.08)"/>
-                            <circle cx="90" cy="90" r="10" fill="#ef4444"/>
-                            <circle cx="120" cy="90" r="10" fill="#f59e0b"/>
-                            <circle cx="150" cy="90" r="10" fill="#10b981"/>
-                            <rect x="180" y="80" width="230" height="20" rx="10" fill="rgba(255,255,255,0.1)"/>
-                            <rect x="70" y="130" width="360" height="200" rx="10" fill="rgba(99,102,241,0.1)"/>
-                            <rect x="90" y="150" width="320" height="30" rx="8" fill="rgba(255,255,255,0.08)"/>
-                            <circle cx="110" cy="165" r="8" fill="rgba(99,102,241,0.5)"/>
-                            <rect x="130" y="158" width="200" height="14" rx="7" fill="rgba(255,255,255,0.1)"/>
-                            <rect x="90" y="200" width="150" height="110" rx="10" fill="rgba(16,185,129,0.2)"/>
-                            <rect x="260" y="200" width="150" height="110" rx="10" fill="rgba(239,68,68,0.2)"/>
-                            <text x="165" y="260" text-anchor="middle" fill="white" font-size="14" font-weight="600">SAFE</text>
-                            <text x="335" y="260" text-anchor="middle" fill="white" font-size="14" font-weight="600">PHISHING</text>
-                        </svg>
-                    </div>
-                </div>
-            </div>
+  <!-- Features Grid -->
+  <section class="relative z-10 px-6 md:px-16 pb-24">
+    <div class="text-center mb-14">
+      <p class="text-xs text-on-surface-variant uppercase tracking-widest font-semibold mb-3">Platform Capabilities</p>
+      <h2 class="text-3xl md:text-4xl font-bold text-on-surface">Enterprise-grade protection</h2>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-6xl mx-auto">
+      <div class="glass-panel rounded-2xl p-6 hover:scale-[1.02] transition-all duration-300 float-slow group">
+        <div class="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-5">
+          <span class="material-symbols-outlined text-primary">psychology</span>
         </div>
-    </section>
-
-    <!-- Stats Section -->
-    <section class="stats-section">
-        <div class="container">
-            <div class="stats-grid">
-                <div class="stat-item fade-up">
-                    <div class="stat-value" data-count="true">{{ urls_analyzed|default('10M+') }}</div>
-                    <div class="stat-label">URLs Analyzed</div>
-                </div>
-                <div class="stat-item fade-up">
-                    <div class="stat-value" data-count="true">{{ detection_accuracy|default('99.2%') }}</div>
-                    <div class="stat-label">Detection Accuracy</div>
-                </div>
-                <div class="stat-item fade-up">
-                    <div class="stat-value" data-count="true">{{ avg_response|default('50ms') }}</div>
-                    <div class="stat-label">Average Response</div>
-                </div>
-                <div class="stat-item fade-up">
-                    <div class="stat-value" data-count="true">{{ active_users|default('10K+') }}</div>
-                    <div class="stat-label">Active Users</div>
-                </div>
-            </div>
+        <h3 class="text-base font-bold text-on-surface mb-2">ML-Powered Analysis</h3>
+        <p class="text-sm text-on-surface-variant leading-relaxed">Gradient boosting and neural network models trained on millions of URLs for blazing-fast, accurate classification.</p>
+      </div>
+      <div class="glass-panel rounded-2xl p-6 hover:scale-[1.02] transition-all duration-300 float-fast group" style="animation-delay:0.8s">
+        <div class="w-10 h-10 rounded-xl bg-secondary/10 border border-secondary/20 flex items-center justify-center mb-5">
+          <span class="material-symbols-outlined text-secondary">security</span>
         </div>
-    </section>
-
-    <!-- Recent Phishing Websites -->
-    <section class="recent-phishing-section" id="phishing-list">
-        <div class="container">
-            <div class="section-header fade-up">
-                <span class="section-badge">Live Feed</span>
-                <h2 class="section-title">Recent Phishing Websites Detected</h2>
-                <p class="section-subtitle">The latest suspicious websites identified by the detection engine are shown here.</p>
-            </div>
-
-            {% if recent_phishing_sites %}
-            <div class="recent-phishing-grid">
-                {% for item in recent_phishing_sites %}
-                <div class="phishing-card fade-up">
-                    <div class="phishing-card-header">
-                        <div>
-                            <div class="phishing-url">{{ item.url }}</div>
-                            <div class="phishing-meta">Detected at {{ item.checked_at }}</div>
-                        </div>
-                        <div class="phishing-score">{{ '%.0f'|format(item.prediction_score) }}%</div>
-                    </div>
-                    <div class="phishing-meta">
-                        Status: <strong>{{ item.prediction_label }}</strong>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <div class="phishing-empty fade-up">
-                No phishing websites have been detected yet. Run a few scans to populate this list.
-            </div>
-            {% endif %}
+        <h3 class="text-base font-bold text-on-surface mb-2">Threat Hunter Agents</h3>
+        <p class="text-sm text-on-surface-variant leading-relaxed">12 autonomous AI agents continuously monitor emerging domains, SMTP relays, and dark web feeds for new attack vectors.</p>
+      </div>
+      <div class="glass-panel rounded-2xl p-6 hover:scale-[1.02] transition-all duration-300 float-slow group" style="animation-delay:1.5s">
+        <div class="w-10 h-10 rounded-xl bg-error/10 border border-error/20 flex items-center justify-center mb-5">
+          <span class="material-symbols-outlined text-error">auto_awesome</span>
         </div>
-    </section>
-
-    <!-- Features Section -->
-    <section class="features-section" id="features">
-        <div class="container">
-            <div class="section-header fade-up">
-                <span class="section-badge">Features</span>
-                <h2 class="section-title">Everything You Need to Stay Safe</h2>
-                <p class="section-subtitle">Powerful features designed to protect you from sophisticated phishing attacks</p>
-            </div>
-            <div class="features-grid">
-                <div class="feature-card fade-up">
-                    <div class="feature-icon">
-                        <i class="fas fa-brain"></i>
-                    </div>
-                    <h3 class="feature-title">AI-Powered Detection</h3>
-                    <p class="feature-desc">Advanced machine learning algorithms trained on millions of URLs to detect even the most sophisticated phishing attempts.</p>
-                </div>
-                <div class="feature-card fade-up">
-                    <div class="feature-icon">
-                        <i class="fas fa-bolt"></i>
-                    </div>
-                    <h3 class="feature-title">Real-Time Analysis</h3>
-                    <p class="feature-desc">Get instant results in milliseconds. Our optimized infrastructure ensures lightning-fast URL verification.</p>
-                </div>
-                <div class="feature-card fade-up">
-                    <div class="feature-icon">
-                        <i class="fas fa-shield-alt"></i>
-                    </div>
-                    <h3 class="feature-title">Threat Intelligence</h3>
-                    <p class="feature-desc">Continuously updated database of known threats with integration to multiple threat intelligence feeds.</p>
-                </div>
-                <div class="feature-card fade-up">
-                    <div class="feature-icon">
-                        <i class="fas fa-chart-bar"></i>
-                    </div>
-                    <h3 class="feature-title">Analytics Dashboard</h3>
-                    <p class="feature-desc">Comprehensive analytics and reports to track your security posture and identify trends.</p>
-                </div>
-                <div class="feature-card fade-up">
-                    <div class="feature-icon">
-                        <i class="fas fa-puzzle-piece"></i>
-                    </div>
-                    <h3 class="feature-title">Browser Extension</h3>
-                    <p class="feature-desc">Seamless integration with your browser for automatic protection while browsing the web.</p>
-                </div>
-                <div class="feature-card fade-up">
-                    <div class="feature-icon">
-                        <i class="fas fa-code"></i>
-                    </div>
-                    <h3 class="feature-title">API Access</h3>
-                    <p class="feature-desc">RESTful API for developers to integrate phishing detection into their applications.</p>
-                </div>
-            </div>
+        <h3 class="text-base font-bold text-on-surface mb-2">GenAI Explanations</h3>
+        <p class="text-sm text-on-surface-variant leading-relaxed">Natural language risk summaries explain exactly why a URL is flagged — homograph attacks, typosquatting, credential harvesting and more.</p>
+      </div>
+      <div class="glass-panel rounded-2xl p-6 hover:scale-[1.02] transition-all duration-300 float-fast group" style="animation-delay:0.4s">
+        <div class="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-5">
+          <span class="material-symbols-outlined text-primary">api</span>
         </div>
-    </section>
-
-    <!-- How It Works -->
-    <section class="how-it-works" id="how-it-works">
-        <div class="container">
-            <div class="section-header fade-up">
-                <span class="section-badge">How It Works</span>
-                <h2 class="section-title">Simple Yet Powerful</h2>
-                <p class="section-subtitle">Three simple steps to protect yourself from phishing attacks</p>
-            </div>
-            <div class="steps-container">
-                <div class="step fade-up">
-                    <div class="step-number">1</div>
-                    <h3 class="step-title">Enter URL</h3>
-                    <p class="step-desc">Paste any suspicious URL into our scanner</p>
-                </div>
-                <div class="step fade-up">
-                    <div class="step-number">2</div>
-                    <h3 class="step-title">AI Analysis</h3>
-                    <p class="step-desc">Our ML model analyzes 30+ features</p>
-                </div>
-                <div class="step fade-up">
-                    <div class="step-number">3</div>
-                    <h3 class="step-title">Get Results</h3>
-                    <p class="step-desc">Receive instant safety verdict</p>
-                </div>
-            </div>
+        <h3 class="text-base font-bold text-on-surface mb-2">External Threat APIs</h3>
+        <p class="text-sm text-on-surface-variant leading-relaxed">Integrated with VirusTotal, Google Safe Browsing, and AbuseIPDB for multi-layer verification of every URL scanned.</p>
+      </div>
+      <div class="glass-panel rounded-2xl p-6 hover:scale-[1.02] transition-all duration-300 float-slow group" style="animation-delay:1.2s">
+        <div class="w-10 h-10 rounded-xl bg-secondary/10 border border-secondary/20 flex items-center justify-center mb-5">
+          <span class="material-symbols-outlined text-secondary">route</span>
         </div>
-    </section>
-
-    <!-- CTA Section -->
-    <section class="cta-section">
-        <div class="container">
-            <div class="cta-card fade-up">
-                <div class="cta-content">
-                    <h2 class="cta-title">Start Protecting Yourself Today</h2>
-                    <p class="cta-subtitle">Join thousands of users who trust PhishGuard to keep them safe online. It's free to get started!</p>
-                    <div class="cta-buttons">
-                        <a href="/user_login" class="btn btn-cta btn-cta-white">
-                            <i class="fas fa-rocket me-2"></i>
-                            Get Started Free
-                        </a>
-                        <a href="/contact" class="btn btn-cta btn-cta-outline">
-                            <i class="fas fa-envelope me-2"></i>
-                            Contact Us
-                        </a>
-                    </div>
-                </div>
-            </div>
+        <h3 class="text-base font-bold text-on-surface mb-2">Auto-Response</h3>
+        <p class="text-sm text-on-surface-variant leading-relaxed">Automatically push block rules to firewalls, notify admins via Slack & email, and generate post-incident reports hands-free.</p>
+      </div>
+      <div class="glass-panel rounded-2xl p-6 hover:scale-[1.02] transition-all duration-300 float-fast group" style="animation-delay:2s">
+        <div class="w-10 h-10 rounded-xl bg-error/10 border border-error/20 flex items-center justify-center mb-5">
+          <span class="material-symbols-outlined text-error">analytics</span>
         </div>
-    </section>
+        <h3 class="text-base font-bold text-on-surface mb-2">Real-Time Analytics</h3>
+        <p class="text-sm text-on-surface-variant leading-relaxed">Live telemetry dashboards, user behavior analytics, and comprehensive audit trails for complete operational visibility.</p>
+      </div>
+    </div>
+  </section>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-grid">
-                <div>
-                    <div class="footer-brand">
-                        <div class="logo-icon">
-                            <i class="fas fa-shield-halved"></i>
-                        </div>
-                        PhishGuard
-                    </div>
-                    <p class="footer-desc">Advanced phishing detection powered by machine learning. Protecting users from malicious websites since 2024.</p>
-                    <div class="social-links">
-                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="social-link"><i class="fab fa-github"></i></a>
-                        <a href="#" class="social-link"><i class="fab fa-linkedin"></i></a>
-                        <a href="#" class="social-link"><i class="fab fa-discord"></i></a>
-                    </div>
-                </div>
-                <div>
-                    <h4 class="footer-title">Product</h4>
-                    <ul class="footer-links">
-                        <li><a href="#features">Features</a></li>
-                        <li><a href="#">API Documentation</a></li>
-                        <li><a href="#">Browser Extension</a></li>
-                        <li><a href="#">Pricing</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="footer-title">Resources</h4>
-                    <ul class="footer-links">
-                        <li><a href="/about">About Us</a></li>
-                        <li><a href="#">Blog</a></li>
-                        <li><a href="#">Security Tips</a></li>
-                        <li><a href="/contact">Support</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="footer-title">Legal</h4>
-                    <ul class="footer-links">
-                        <li><a href="#">Privacy Policy</a></li>
-                        <li><a href="#">Terms of Service</a></li>
-                        <li><a href="#">Cookie Policy</a></li>
-                        <li><a href="#">GDPR</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p class="footer-copyright">&copy; 2026 PhishGuard. All rights reserved.</p>
-                <p class="footer-copyright">Made with <i class="fas fa-heart" style="color: #ef4444;"></i> for a safer internet</p>
-            </div>
-        </div>
-    </footer>
+  <!-- CTA -->
+  <section class="relative z-10 px-6 md:px-16 pb-20">
+    <div class="max-w-3xl mx-auto glass-panel rounded-3xl p-10 text-center">
+      <div class="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-6">
+        <span class="material-symbols-outlined text-primary text-3xl">rocket_launch</span>
+      </div>
+      <h2 class="text-2xl md:text-3xl font-bold text-on-surface mb-4">Ready to secure your organization?</h2>
+      <p class="text-on-surface-variant text-sm md:text-base mb-8 max-w-xl mx-auto">Start scanning URLs for free. No credit card required. Join thousands of users who trust PhishGuard-ML for their online security.</p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="/user_login" class="flex items-center justify-center gap-2 bg-primary text-on-primary px-8 py-3.5 rounded-xl font-semibold text-base hover:bg-primary/80 transition-all hover:scale-[1.02] duration-200 shadow-[0_0_25px_rgba(173,198,255,0.2)]">
+          <span class="material-symbols-outlined">person</span> Get Started Free
+        </a>
+      </div>
+    </div>
+  </section>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Navbar scroll effect
-        window.addEventListener('scroll', function() {
-            const navbar = document.querySelector('.navbar');
-            if (window.scrollY > 50) {
-                navbar.classList.add('scrolled');
-            } else {
-                navbar.classList.remove('scrolled');
-            }
-        });
+  <!-- Footer -->
+  <footer class="relative z-10 border-t border-white/5 px-6 md:px-16 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-primary text-lg">shield</span>
+      <span class="text-sm text-on-surface-variant">© 2026 <span class="text-on-surface font-semibold">PhishGuard-ML</span>. All rights reserved.</span>
+    </div>
+    <div class="flex items-center gap-1 text-xs text-on-surface-variant">
+      <span class="w-1.5 h-1.5 rounded-full bg-secondary pulse-dot"></span>
+      Vigilance Active — {{ detection_accuracy }} accuracy
+    </div>
+  </footer>
 
-        // Scroll animations
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
 
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                }
-            });
-        }, observerOptions);
-
-        document.querySelectorAll('.fade-up').forEach(el => {
-            observer.observe(el);
-        });
-
-        // Smooth scroll
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function(e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({ behavior: 'smooth' });
-                }
-            });
-        });
-    </script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-analytics.js";
+    const firebaseConfig = {
+      apiKey: "AIzaSyCYEtd17LMqAsCmpX5gCr-u4FHIE3a4Otw",
+      authDomain: "ml-phi.firebaseapp.com",
+      projectId: "ml-phi",
+      storageBucket: "ml-phi.firebasestorage.app",
+      messagingSenderId: "810106830376",
+      appId: "1:810106830376:web:64a2333f7cbaeafd10ff1d",
+      measurementId: "G-YM1DGWVLFH"
+    };
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+  </script>
 </body>
+
 </html>

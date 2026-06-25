@@ -3,7 +3,7 @@ Simple Phishing URL Classifier - Works without pycaret
 Uses scikit-learn for prediction based on URL features
 """
 
-import pickle
+import joblib
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
@@ -13,86 +13,30 @@ class PhishingClassifier:
     def __init__(self):
         self.model = None
         self.scaler = StandardScaler()
-        self.model_path = 'model/simple_model.pkl'
-        self.scaler_path = 'model/simple_scaler.pkl'
+        self.model_path = 'model/simple_model.joblib'
+        self.scaler_path = 'model/simple_scaler.joblib'
         self._load_or_create_model()
     
     def _load_or_create_model(self):
-        """Load existing model or create a new pre-trained one"""
+        """Load existing model (C-11: Refuse to serve if deleted/missing)."""
         if os.path.exists(self.model_path) and os.path.exists(self.scaler_path):
             try:
-                with open(self.model_path, 'rb') as f:
-                    self.model = pickle.load(f)
-                with open(self.scaler_path, 'rb') as f:
-                    self.scaler = pickle.load(f)
+                self.model = joblib.load(self.model_path)
+                self.scaler = joblib.load(self.scaler_path)
                 print("Model loaded successfully!")
                 return
             except Exception as e:
-                print(f"Error loading model: {e}")
+                raise RuntimeError(f"Error loading classifier model: {e}")
         
-        # Create and train a simple model with synthetic data
-        self._create_pretrained_model()
+        # C-11: Do not silently fallback to creating a synthetic model
+        raise FileNotFoundError(
+            f"Classifier model files not found: {self.model_path} or {self.scaler_path}. "
+            "Run train.py to generate them."
+        )
     
     def _create_pretrained_model(self):
-        """Create a pre-trained model with synthetic training data"""
-        print("Creating new model...")
-        
-        # Generate synthetic training data
-        # Features: [url_length, url_depth, is_tiny_url, has_prefix_suffix, 
-        #            num_dots, has_sensitive_words, domain_age, domain_end, 
-        #            has_symbol, domain_att]
-        np.random.seed(42)
-        n_samples = 1000
-        
-        # Safe URLs - typical characteristics
-        safe_features = np.column_stack([
-            np.random.normal(50, 15, n_samples // 2),      # url_length (shorter)
-            np.random.randint(1, 4, n_samples // 2),       # url_depth (shallow)
-            np.zeros(n_samples // 2),                       # is_tiny_url (no)
-            np.zeros(n_samples // 2),                       # has_prefix_suffix (no)
-            np.random.randint(1, 4, n_samples // 2),       # num_dots (few)
-            np.zeros(n_samples // 2),                       # has_sensitive_words (no)
-            np.random.randint(0, 2, n_samples // 2),       # domain_age (established)
-            np.zeros(n_samples // 2),                       # domain_end (not suspicious)
-            np.random.randint(0, 2, n_samples // 2),       # has_symbol (few)
-            np.random.normal(0.3, 0.2, n_samples // 2),    # domain_att (low)
-        ])
-        
-        # Phishing URLs - typical characteristics
-        phish_features = np.column_stack([
-            np.random.normal(100, 30, n_samples // 2),     # url_length (longer)
-            np.random.randint(3, 8, n_samples // 2),       # url_depth (deep)
-            np.random.randint(0, 2, n_samples // 2),       # is_tiny_url (sometimes)
-            np.ones(n_samples // 2),                        # has_prefix_suffix (yes)
-            np.random.randint(3, 8, n_samples // 2),       # num_dots (many)
-            np.ones(n_samples // 2),                        # has_sensitive_words (yes)
-            np.ones(n_samples // 2),                        # domain_age (new)
-            np.ones(n_samples // 2),                        # domain_end (suspicious)
-            np.random.randint(2, 5, n_samples // 2),       # has_symbol (many)
-            np.random.normal(0.8, 0.2, n_samples // 2),    # domain_att (high)
-        ])
-        
-        X = np.vstack([safe_features, phish_features])
-        y = np.array([0] * (n_samples // 2) + [1] * (n_samples // 2))
-        
-        # Shuffle the data
-        indices = np.random.permutation(n_samples)
-        X = X[indices]
-        y = y[indices]
-        
-        # Fit scaler and model
-        X_scaled = self.scaler.fit_transform(X)
-        self.model = RandomForestClassifier(n_estimators=100, random_state=42)
-        self.model.fit(X_scaled, y)
-        
-        # Save model
-        os.makedirs('model', exist_ok=True)
-        with open(self.model_path, 'wb') as f:
-            pickle.dump(self.model, f)
-        with open(self.scaler_path, 'wb') as f:
-            pickle.dump(self.scaler, f)
-        
-        print("Model created and saved successfully!")
+        """Removed to prevent silent synthetic fallback (C-11)."""
+        pass
     
     def predict(self, features):
         """
@@ -105,7 +49,7 @@ class PhishingClassifier:
             tuple: (prediction_label, prediction_score)
         """
         if self.model is None:
-            return 0, 0.5
+            raise RuntimeError("Model not loaded")
         
         try:
             features = np.array(features).reshape(1, -1)
@@ -120,7 +64,7 @@ class PhishingClassifier:
             return int(prediction), float(phishing_score)
         except Exception as e:
             print(f"Prediction error: {e}")
-            return 0, 0.5
+            raise e
 
 
 # Create global classifier instance

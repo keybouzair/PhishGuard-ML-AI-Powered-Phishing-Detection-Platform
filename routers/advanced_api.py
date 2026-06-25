@@ -62,13 +62,14 @@ def shutdown_event():
 # Include the AI SOC features
 app.include_router(soc_router)
 
-# Zero Trust: Restrict CORS (In production, replace '*' with specific domains)
+# A-08: Use configurable CORS origins — NEVER use '*' with credentials
+_allowed_origins = os.environ.get('ALLOWED_ORIGINS', 'http://localhost:5001').split(',')
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[o.strip() for o in _allowed_origins],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 # Initialize Services
@@ -199,6 +200,8 @@ async def email_scan(
         # Email parsing service removed
         raise HTTPException(status_code=503, detail="Email parsing service not available")
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Email scan failed: {e}")
         raise HTTPException(status_code=500, detail="Email processing failed")

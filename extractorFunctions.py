@@ -71,11 +71,17 @@ sensitiveWords = ["account", "confirm", "banking", "secure", "ebyisapi", "webscr
                   "personal", "actionrequired", "loginverify", "validate", "paymentupdate", "urgent"]
 
 def sensitive_word(url):
-  domain = urlparse(url).netloc
-  for i in sensitiveWords:
-    if i in domain:
+  """Check path + query for sensitive words using word boundaries (B-07)."""
+  try:
+    parsed = urlparse(url)
+    target_text = f"{parsed.path} {parsed.query}".lower()
+    # Build regex with word boundaries
+    pattern = r"\b(" + "|".join(re.escape(w) for w in sensitiveWords) + r")\b"
+    if re.search(pattern, target_text):
       return 1
-  return 0
+    return 0
+  except Exception:
+    return 0
 
 
 def has_unicode(url):

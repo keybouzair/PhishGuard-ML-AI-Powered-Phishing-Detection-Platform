@@ -14,6 +14,8 @@ from datetime import datetime
 from typing import List, Optional
 import sqlite3
 
+import html
+
 # Email Configuration (use environment variables in production)
 SMTP_SERVER = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
 SMTP_PORT = int(os.environ.get('SMTP_PORT', 587))
@@ -127,13 +129,18 @@ class EmailService:
             
             conn.commit()
             conn.close()
-        except:
+        except Exception:
+            # D-04: Fixed bare except to catch general Exception
             pass
     
     def send_phishing_alert(self, user_email: str, username: str, 
                            url: str, threat_score: float, details: dict = None):
         """Send phishing detection alert to user"""
         
+        # C-16: HTML escape user values
+        username_esc = html.escape(username)
+        url_esc = html.escape(url)
+
         subject = "⚠️ Phishing Alert - Dangerous URL Detected!"
         
         html_body = f"""
@@ -161,12 +168,12 @@ class EmailService:
         </div>
         
         <div class="content">
-            <p>Hello <strong>{username}</strong>,</p>
+            <p>Hello <strong>{username_esc}</strong>,</p>
             
             <p>Our system has detected a potentially <span class="danger">dangerous phishing URL</span> that you recently checked:</p>
             
             <div class="url-box">
-                {url}
+                {url_esc}
             </div>
             
             <div class="alert-box">
@@ -321,6 +328,9 @@ Generated at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
     def send_welcome_email(self, user_email: str, username: str):
         """Send welcome email to new user"""
         
+        # C-16: HTML escape user values
+        username_esc = html.escape(username)
+
         subject = "🎉 Welcome to Phishing Detection System!"
         
         html_body = f"""
@@ -346,7 +356,7 @@ Generated at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         </div>
         
         <div class="content">
-            <h2>Hello {username}!</h2>
+            <h2>Hello {username_esc}!</h2>
             
             <p>Welcome to the Phishing Detection System. Your account has been successfully created.</p>
             
@@ -403,6 +413,10 @@ Generated at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
     def send_password_reset(self, user_email: str, username: str, reset_token: str):
         """Send password reset email"""
         
+        # C-16: HTML escape user values
+        username_esc = html.escape(username)
+        reset_token_esc = html.escape(reset_token)
+
         subject = "🔐 Password Reset Request"
         
         html_body = f"""
@@ -427,12 +441,12 @@ Generated at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         </div>
         
         <div class="content">
-            <p>Hello <strong>{username}</strong>,</p>
+            <p>Hello <strong>{username_esc}</strong>,</p>
             
             <p>We received a request to reset your password. Use the code below to complete the process:</p>
             
             <div class="token-box">
-                {reset_token}
+                {reset_token_esc}
             </div>
             
             <div class="warning">

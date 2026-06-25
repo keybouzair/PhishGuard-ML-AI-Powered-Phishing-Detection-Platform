@@ -10,17 +10,64 @@ import os
 import time
 import json
 import uuid
+import socket
+import ipaddress
 import logging
+from urllib.parse import urlparse
 from typing import Dict, Any, Optional
 
 try:
     from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeoutError
 except ImportError:
-    print("Warning: playwright is not installed. Visual analysis will not work.")
+    logging.getLogger("security").warning(
+        "playwright is not installed. Visual analysis will not work."
+    )
     async_playwright = None
 
 # Configure security logger
 logger = logging.getLogger("security")
+
+
+# ---------- A-05: SSRF protection ----------
+
+def _is_safe_target(url: str) -> bool:
+    """Validate that a URL resolves to a publicly routable host.
+
+    Blocks private, loopback, link-local, reserved, and multicast addresses.
+    Also rejects non-http(s) schemes (e.g. file://, ftp://).
+    """
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme not in ('http', 'https'):
+            logger.warning("SSRF check: rejected scheme %r", parsed.scheme)
+            return False
+
+        hostname = parsed.hostname
+        if not hostname:
+            return False
+
+        # Resolve the hostname to IP addresses
+        for family, _, _, _, sockaddr in socket.getaddrinfo(hostname, None):
+            ip = ipaddress.ip_address(sockaddr[0])
+            if (
+                ip.is_private
+                or ip.is_loopback
+                or ip.is_link_local
+                or ip.is_reserved
+                or ip.is_multicast
+                or ip.is_unspecified
+            ):
+                logger.warning(
+                    "SSRF check: rejected %s -> %s (private/reserved)",
+                    hostname, ip,
+                )
+                return False
+
+        return True
+    except Exception as e:
+        logger.error("SSRF check: error resolving %r: %s", url, e)
+        return False
+
 
 class VisualAnalysisService:
     """Service to detect visual brand impersonation using headless browser automation and Vision LLM."""
@@ -51,6 +98,11 @@ class VisualAnalysisService:
         """
         if not async_playwright:
             logger.error("Playwright is not installed. Cannot capture screenshot.")
+            return None
+
+        # A-05: SSRF guard - block internal/private targets
+        if not _is_safe_target(url):
+            logger.error("Blocked SSRF attempt for URL: %s", url)
             return None
             
         screenshot_filename = f"scan_{uuid.uuid4().hex}.png"

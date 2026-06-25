@@ -13,14 +13,16 @@ from datetime import datetime, timedelta
 from functools import lru_cache
 import os
 
+from collections import OrderedDict
+
 # Configuration
 VIRUSTOTAL_API_KEY = os.environ.get('VIRUSTOTAL_API_KEY', 'your_virustotal_api_key_here')
 GOOGLE_SAFE_BROWSING_API_KEY = os.environ.get('GOOGLE_SAFE_BROWSING_API_KEY', 'your_google_api_key_here')
 URLHAUS_API_URL = 'https://urlhaus-api.abuse.ch/v1'
 PHISHTANK_API_KEY = os.environ.get('PHISHTANK_API_KEY', '')
 
-# Cache for API responses (in-memory)
-_threat_cache = {}
+# Cache for API responses (in-memory) (B-02: using OrderedDict for LRU eviction)
+_threat_cache: OrderedDict[str, dict] = OrderedDict()
 CACHE_DURATION = 3600  # 1 hour
 
 
@@ -52,18 +54,45 @@ class ThreatIntelligence:
         if cache_key in _threat_cache:
             cached = _threat_cache[cache_key]
             if datetime.now() - cached['cached_at'] < timedelta(seconds=CACHE_DURATION):
+                _threat_cache.move_to_end(cache_key)
                 return cached['data']
+            else:
+                _threat_cache.pop(cache_key, None)
         
-        # Run all checks
-        vt_result = self.check_virustotal(url)
-        gsb_result = self.check_google_safe_browsing(url)
-        urlhaus_result = self.check_urlhaus(url)
-        phishtank_result = self.check_phishtank(url)
+        # Run all checks concurrently with a global 5.0 seconds deadline (B-22)
+        from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
         
-        results['sources']['virustotal'] = vt_result
-        results['sources']['google_safe_browsing'] = gsb_result
-        results['sources']['urlhaus'] = urlhaus_result
-        results['sources']['phishtank'] = phishtank_result
+        sources_to_check = {
+            'virustotal': self.check_virustotal,
+            'google_safe_browsing': self.check_google_safe_browsing,
+            'urlhaus': self.check_urlhaus,
+            'phishtank': self.check_phishtank
+        }
+        
+        futures = {}
+        start_time = time.time()
+        
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            for source, func in sources_to_check.items():
+                futures[source] = executor.submit(func, url)
+            
+            for source, future in futures.items():
+                elapsed = time.time() - start_time
+                remaining = max(0.1, 5.0 - elapsed)
+                try:
+                    results['sources'][source] = future.result(timeout=remaining)
+                except FuturesTimeoutError:
+                    results['sources'][source] = {
+                        'checked': False,
+                        'is_malicious': False,
+                        'error': 'API call timed out'
+                    }
+                except Exception as e:
+                    results['sources'][source] = {
+                        'checked': False,
+                        'is_malicious': False,
+                        'error': f'Failed: {str(e)}'
+                    }
         
         # Calculate combined threat score
         threat_score = self._calculate_threat_score(results['sources'])
@@ -87,6 +116,11 @@ class ThreatIntelligence:
             results['is_malicious'] = False
         
         # Cache the result
+        if cache_key in _threat_cache:
+            _threat_cache.pop(cache_key)
+        elif len(_threat_cache) >= 5000:
+            _threat_cache.popitem(last=False)
+            
         _threat_cache[cache_key] = {
             'data': results,
             'cached_at': datetime.now()

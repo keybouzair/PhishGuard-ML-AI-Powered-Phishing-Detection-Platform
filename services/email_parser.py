@@ -36,36 +36,50 @@ class EmailIntelligenceService:
         # Regex to extract URLs strictly starting with http/https
         self.url_pattern = re.compile(
             r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
-        )
-        
-    def _extract_text_body(self, msg: EmailMessage) -> str:
-        """Extract plain text and HTML bodies from the email."""
+        )    def _extract_text_body(self, msg: EmailMessage) -> str:
+        """Extract plain text and HTML bodies from the email with recursion/part caps (B-15)."""
         body_text = ""
+        total_parts = 0
+        max_parts = 100
         
-        if msg.is_multipart():
-            for part in msg.walk():
-                content_type = part.get_content_type()
-                content_disposition = str(part.get("Content-Disposition"))
+        def walk_parts(message, depth=0):
+            nonlocal body_text, total_parts
+            if depth > 10:  # C-01/B-15 recursion depth cap
+                return
+            if total_parts > max_parts:
+                return
+
+            if message.is_multipart():
+                payload = message.get_payload()
+                if isinstance(payload, list):
+                    for part in payload:
+                        total_parts += 1
+                        walk_parts(part, depth + 1)
+            else:
+                content_type = message.get_content_type()
+                content_disposition = str(message.get("Content-Disposition", ""))
                 
                 # Only look at main body (ignore attachments for now)
                 if "attachment" not in content_disposition:
                     if content_type == "text/plain":
                         try:
-                            body_text += part.get_payload(decode=True).decode('utf-8', errors='ignore') + "\n"
+                            body_text += message.get_payload(decode=True).decode('utf-8', errors='ignore') + "\n"
                         except Exception as e:
                             logger.debug(f"Failed to decode text/plain part: {e}")
                             
                     elif content_type == "text/html":
                         try:
-                            # We could use bs4 here to strip HTML tags, but regex URL extraction works on raw HTML too.
-                            body_text += part.get_payload(decode=True).decode('utf-8', errors='ignore') + "\n"
+                            body_text += message.get_payload(decode=True).decode('utf-8', errors='ignore') + "\n"
                         except Exception as e:
                             logger.debug(f"Failed to decode text/html part: {e}")
-        else:
+
+        if not msg.is_multipart():
             try:
                 body_text = msg.get_payload(decode=True).decode('utf-8', errors='ignore')
             except Exception as e:
                  logger.error(f"Failed to decode single-part body: {e}")
+        else:
+            walk_parts(msg)
                  
         return body_text
 
@@ -118,6 +132,13 @@ class EmailIntelligenceService:
         Returns:
             Dict[str, Any]: Scan results including metadata, URLs, and language risk score.
         """
+        # B-15: size guard (5 MB)
+        if len(file_data) > 5 * 1024 * 1024:
+            return {
+                "status": "error",
+                "message": "File size exceeds maximum limit of 5 MB"
+            }
+
         try:
             # Parse raw bytes into Python EmailMessage object
             msg = email.message_from_bytes(file_data, policy=policy.default)
@@ -150,4 +171,4 @@ class EmailIntelligenceService:
             return {
                 "status": "error",
                 "message": f"Failed to parse email file: {str(e)}"
-            }
+            }         }

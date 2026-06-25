@@ -93,6 +93,13 @@ class WebhookManager:
         Returns:
             Dictionary with webhook info
         """
+        # C-33: Validate URL scheme and safety against SSRF
+        from services.visual_analysis import _is_safe_target
+        if not url or not (url.startswith('http://') or url.startswith('https://')):
+            raise ValueError("Invalid URL scheme. Only http and https are allowed.")
+        if not _is_safe_target(url):
+            raise ValueError("Webhook URL points to an unsafe or internal address.")
+
         try:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
@@ -129,18 +136,16 @@ class WebhookManager:
         
         # Get webhooks subscribed to this event
         cursor.execute('''
-            SELECT id, url, secret, retry_count FROM webhooks 
+            SELECT id, url, secret, retry_count, events FROM webhooks 
             WHERE is_active = 1
         ''')
         
         webhooks = cursor.fetchall()
         
         for webhook in webhooks:
-            webhook_id, url, secret, retry_count = webhook
+            webhook_id, url, secret, retry_count, events_str = webhook
             
-            # Check if webhook is subscribed to this event
-            cursor.execute('SELECT events FROM webhooks WHERE id = ?', (webhook_id,))
-            events = json.loads(cursor.fetchone()[0])
+            events = json.loads(events_str)
             
             if event['event_type'] not in events and '*' not in events:
                 continue
@@ -528,18 +533,21 @@ class ActiveDefenseAgent:
         thread.start()
         
     def _extract_domain(self, url: str) -> str:
-        """Extract the root domain from a full URL."""
+        """Extract the root domain from a full URL using tldextract (B-18)."""
         try:
-            parsed = urllib.parse.urlparse(url)
-            domain = parsed.netloc or parsed.path
-            domain = domain.split(':')[0] # Remove port if present
-            # Basic eTLD extraction (simplified for this demo)
-            parts = domain.split('.')
-            if len(parts) > 2:
-                domain = '.'.join(parts[-2:])
-            return domain
-        except:
-             return url
+            import tldextract
+            ext = tldextract.extract(url)
+            if ext.registered_domain:
+                return ext.registered_domain
+            return ext.domain
+        except Exception:
+            try:
+                parsed = urllib.parse.urlparse(url)
+                domain = parsed.netloc or parsed.path
+                domain = domain.split(':')[0]
+                return domain
+            except Exception:
+                return url
 
     def _perform_whois_lookup(self, domain: str) -> Dict[str, str]:
         """Simulate a WHOIS lookup to find the abuse contact."""
@@ -609,7 +617,7 @@ Automated Security Operations Center
             # If a table for active defense logs existed, we'd log it here.
             # Using activity log instead.
             cursor.execute('''
-                INSERT INTO activity_logs (username, action, details, ip_address)
+                INSERT INTO activity_log (username, action, details, ip_address)
                 VALUES (?, ?, ?, ?)
             ''', ('system_agent', 'Auto Takedown Triggered', f"Auto blocked {domain} and drafted abuse email.", "127.0.0.1"))
             conn.commit()
