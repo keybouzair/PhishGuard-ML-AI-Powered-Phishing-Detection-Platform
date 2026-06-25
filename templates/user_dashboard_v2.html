@@ -82,6 +82,12 @@
       <button onclick="showSection('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-primary font-semibold bg-primary/8 border-r-2 border-primary text-sm transition-all duration-150">
         <span class="material-symbols-outlined text-lg">dashboard</span> Dashboard
       </button>
+      <button onclick="showSection('email')" id="nav-email" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-white/5 text-sm transition-all duration-150">
+        <span class="material-symbols-outlined text-lg">mail</span> Email Parser
+      </button>
+      <button onclick="showSection('qr')" id="nav-qr" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-white/5 text-sm transition-all duration-150">
+        <span class="material-symbols-outlined text-lg">qr_code_scanner</span> QR Scanner
+      </button>
       <button onclick="showSection('history')" id="nav-history" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-white/5 text-sm transition-all duration-150">
         <span class="material-symbols-outlined text-lg">history</span> History &amp; Logs
       </button>
@@ -255,6 +261,78 @@
               {% endif %}
             </div>
           </div>
+          
+          <!-- AI & SOC Risk Correlation Card -->
+          {% if extra_metrics and (extra_metrics.ai_summary or extra_metrics.visual_brand) %}
+          <div class="slide-in mt-6 bg-surface-container/40 border border-primary/20 rounded-xl p-5 glass-panel relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl pointer-events-none"></div>
+            <div class="flex items-center gap-2 mb-4 border-b border-white/8 pb-3">
+              <span class="material-symbols-outlined text-primary text-xl">psychology</span>
+              <h3 class="text-base font-bold text-primary">AI &amp; SOC Risk Correlation</h3>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- LLM Risk Summary -->
+              <div class="space-y-3">
+                <h4 class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">LLM Risk Intelligence</h4>
+                <div class="bg-surface-container/80 border border-white/5 rounded-xl p-4">
+                  <p class="text-sm text-on-surface leading-relaxed">
+                    {{ extra_metrics.ai_summary }}
+                  </p>
+                  <div class="mt-4 flex items-center gap-2">
+                    <span class="text-xs text-on-surface-variant">Recommended Action:</span>
+                    <span class="text-[10px] font-bold px-2.5 py-1 rounded-lg uppercase tracking-wider 
+                      {% if 'Block' in extra_metrics.ai_action or 'Takedown' in extra_metrics.ai_action %}
+                        bg-error/15 text-error border border-error/20
+                      {% elif 'Monitor' in extra_metrics.ai_action or 'sandbox' in extra_metrics.ai_action %}
+                        bg-primary/15 text-primary border border-primary/20
+                      {% else %}
+                        bg-secondary/15 text-secondary border border-secondary/20
+                      {% endif %}">
+                      {{ extra_metrics.ai_action }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Visual Brand Abuse -->
+              <div class="space-y-3">
+                <h4 class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Visual Impersonation Scan</h4>
+                <div class="bg-surface-container/80 border border-white/5 rounded-xl p-4">
+                  {% if extra_metrics.visual_brand %}
+                    <div class="flex items-center gap-2.5 mb-2">
+                      <span class="material-symbols-outlined text-error">warning</span>
+                      <p class="text-sm font-bold text-on-surface">
+                        Brand Detected: <span class="text-error">{{ extra_metrics.visual_brand }}</span>
+                      </p>
+                    </div>
+                    <div class="mb-3">
+                      <div class="flex items-center justify-between text-xs text-on-surface-variant mb-1">
+                        <span>Visual Similarity Score</span>
+                        <span class="font-bold text-error">{{ extra_metrics.visual_score }}%</span>
+                      </div>
+                      <div class="w-full bg-surface-variant h-1.5 rounded-full overflow-hidden">
+                        <div class="h-full bg-error rounded-full" style="width: {{ extra_metrics.visual_score }}%"></div>
+                      </div>
+                    </div>
+                    <p class="text-xs text-on-surface-variant leading-relaxed">
+                      {{ extra_metrics.visual_reason }}
+                    </p>
+                  {% else %}
+                    <div class="flex items-center gap-2.5 text-secondary mb-2">
+                      <span class="material-symbols-outlined">verified</span>
+                      <p class="text-sm font-bold">No Visual Brand Abuse Detected</p>
+                    </div>
+                    <p class="text-xs text-on-surface-variant leading-relaxed">
+                      No recognizable logo, brand styling, or credential harvesting template matching known entities was detected on the rendered landing page.
+                    </p>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+          
           {% endif %}
         </div>
       </div>
@@ -299,6 +377,242 @@
               {% endif %}
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ───── EMAIL PARSER ───── -->
+    <div id="section-email" class="section-panel">
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-on-surface">Email Intelligence Parser</h2>
+        <p class="text-sm text-on-surface-variant mt-1">Upload raw EML files to extract and analyze embedded URLs and detect urgent language.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Upload Form Card -->
+        <div class="lg:col-span-5 glass-panel rounded-2xl p-6 self-start">
+          <h3 class="text-sm font-bold text-on-surface flex items-center gap-2 mb-4">
+            <span class="material-symbols-outlined text-primary">mail</span> Upload EML File
+          </h3>
+          <form id="emailUploadForm" action="/scan_email" method="POST" enctype="multipart/form-data" class="space-y-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="border-2 border-dashed border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-all duration-200" onclick="document.getElementById('emailFile').click()">
+              <span class="material-symbols-outlined text-on-surface-variant text-4xl mb-2">upload_file</span>
+              <p class="text-sm text-on-surface font-semibold text-center">Click to choose or drag EML file here</p>
+              <p class="text-xs text-on-surface-variant/60 text-center mt-1">Maximum file size: 5 MB</p>
+              <input type="file" id="emailFile" name="file" accept=".eml" class="hidden" onchange="updateFileName(this, 'emailFileName')"/>
+              <p id="emailFileName" class="text-xs font-semibold text-primary mt-3 hidden"></p>
+            </div>
+            <button type="submit" class="w-full flex items-center justify-center gap-2 bg-primary text-on-primary py-3 rounded-xl text-sm font-semibold hover:bg-primary/80 transition-all shadow-[0_0_15px_rgba(173,198,255,0.2)] hover:scale-[1.01] duration-150">
+              <span class="material-symbols-outlined text-base">analytics</span> Parse &amp; Analyze Email
+            </button>
+          </form>
+        </div>
+
+        <!-- Scan Results -->
+        <div class="lg:col-span-7 space-y-6">
+          {% if email_result %}
+            {% if email_result.status == 'success' %}
+              <!-- Email Metadata -->
+              <div class="glass-panel rounded-2xl p-6 slide-in">
+                <h3 class="text-sm font-bold text-on-surface flex items-center gap-2 mb-4 border-b border-white/8 pb-3">
+                  <span class="material-symbols-outlined text-secondary">info</span> Email Details
+                </h3>
+                <div class="space-y-3 text-sm text-on-surface">
+                  <div class="grid grid-cols-3 gap-2">
+                    <span class="text-on-surface-variant">Subject:</span>
+                    <span class="col-span-2 font-semibold">{{ email_result.metadata.subject or 'No Subject' }}</span>
+                  </div>
+                  <div class="grid grid-cols-3 gap-2">
+                    <span class="text-on-surface-variant">From:</span>
+                    <span class="col-span-2 font-semibold">{{ email_result.metadata.sender or 'Unknown' }}</span>
+                  </div>
+                  <div class="grid grid-cols-3 gap-2">
+                    <span class="text-on-surface-variant">To:</span>
+                    <span class="col-span-2 font-semibold">{{ email_result.metadata.recipient or 'Unknown' }}</span>
+                  </div>
+                  <div class="grid grid-cols-3 gap-2">
+                    <span class="text-on-surface-variant">Date:</span>
+                    <span class="col-span-2 font-semibold">{{ email_result.metadata.date or 'Unknown' }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Language & Urgency Analysis -->
+              <div class="glass-panel rounded-2xl p-6 slide-in">
+                <h3 class="text-sm font-bold text-on-surface flex items-center gap-2 mb-4 border-b border-white/8 pb-3">
+                  <span class="material-symbols-outlined text-primary">psychology</span> Urgency &amp; NLP Analysis
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <div class="flex items-center justify-between text-xs text-on-surface-variant mb-1.5">
+                      <span>Urgency Language Score</span>
+                      <span class="font-bold text-error">{{ email_result.risk_language_score }}%</span>
+                    </div>
+                    <div class="w-full bg-surface-variant h-2 rounded-full overflow-hidden mb-4">
+                      <div class="h-full bg-error rounded-full" style="width: {{ email_result.risk_language_score }}%"></div>
+                    </div>
+                    <p class="text-xs text-on-surface-variant">
+                      Analyzes subject line and body text for high-pressure words (e.g. "immediately", "urgent", "account suspended").
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <div class="flex items-center justify-between text-xs text-on-surface-variant mb-1.5">
+                      <span>AI-Generated Probability</span>
+                      <span class="font-bold text-primary">{{ email_result.ai_generated_probability }}%</span>
+                    </div>
+                    <div class="w-full bg-surface-variant h-2 rounded-full overflow-hidden mb-4">
+                      <div class="h-full bg-primary rounded-full" style="width: {{ email_result.ai_generated_probability }}%"></div>
+                    </div>
+                    <p class="text-xs text-on-surface-variant">
+                      Probability estimation that the email body is AI-generated templates typical in automated phishing campaigns.
+                    </p>
+                  </div>
+                </div>
+
+                {% if email_result.matched_keywords %}
+                <div class="mt-4">
+                  <h4 class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Flagged Urgency Keywords</h4>
+                  <div class="flex flex-wrap gap-2">
+                    {% for keyword in email_result.matched_keywords %}
+                      <span class="text-[10px] font-bold bg-error/10 text-error border border-error/20 px-2.5 py-1 rounded-lg uppercase tracking-wider">{{ keyword }}</span>
+                    {% endfor %}
+                  </div>
+                </div>
+                {% endif %}
+              </div>
+
+              <!-- Extracted URLs -->
+              <div class="glass-panel rounded-2xl p-6 slide-in">
+                <h3 class="text-sm font-bold text-on-surface flex items-center gap-2 mb-4 border-b border-white/8 pb-3">
+                  <span class="material-symbols-outlined text-primary">link</span> Extracted URLs ({{ email_result.urls_extracted|length }})
+                </h3>
+                {% if email_result.urls_extracted %}
+                  <div class="space-y-4">
+                    {% for item in email_result.urls_checked %}
+                      <div class="bg-surface-container/50 border border-white/5 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                        <div class="min-w-0">
+                          <code class="text-xs text-on-surface-variant break-all font-semibold block">{{ item.url }}</code>
+                          {% if item.extra_metrics and item.extra_metrics.ai_summary %}
+                            <p class="text-xs text-on-surface-variant/80 mt-1 italic">{{ item.extra_metrics.ai_summary }}</p>
+                          {% endif %}
+                        </div>
+                        <div class="flex items-center gap-2.5 shrink-0 self-end md:self-auto">
+                          <span class="text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider
+                            {% if item.prediction_label == 'Safe' %}
+                              bg-secondary/10 text-secondary border border-secondary/20
+                            {% else %}
+                              bg-error/10 text-error border border-error/20
+                            {% endif %}">
+                            {{ item.prediction_label }}
+                          </span>
+                          <button onclick="recheckUrl('{{ item.url | e }}')" class="text-xs text-primary border border-primary/20 bg-primary/5 hover:bg-primary/15 px-2.5 py-1 rounded-lg transition-all">
+                            Check Details
+                          </button>
+                        </div>
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% else %}
+                  <p class="text-sm text-on-surface-variant text-center py-4">No embedded URLs found in this email file.</p>
+                {% endif %}
+              </div>
+            {% else %}
+              <div class="flex items-start gap-3 bg-error/10 border border-error/25 rounded-xl px-4 py-3 slide-in">
+                <span class="material-symbols-outlined text-error text-base mt-0.5">error</span>
+                <p class="text-sm text-error font-semibold">{{ email_result.message }}</p>
+              </div>
+            {% endif %}
+          {% else %}
+            <div class="glass-panel rounded-2xl p-8 flex flex-col items-center justify-center text-center text-on-surface-variant min-h-[250px]">
+              <span class="material-symbols-outlined text-5xl text-on-surface-variant/30 mb-3">mail</span>
+              <p class="text-sm">No email parsed yet. Upload an EML file to inspect header and body content.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- ───── QR SCANNER ───── -->
+    <div id="section-qr" class="section-panel">
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-on-surface">QR Code &amp; Quishing Scanner</h2>
+        <p class="text-sm text-on-surface-variant mt-1">Upload QR code images (PNG, JPG, WEBP) or PDF files containing QR codes to scan them for phishing payloads.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Upload Form Card -->
+        <div class="lg:col-span-5 glass-panel rounded-2xl p-6 self-start">
+          <h3 class="text-sm font-bold text-on-surface flex items-center gap-2 mb-4">
+            <span class="material-symbols-outlined text-primary">qr_code_scanner</span> Upload Image or PDF
+          </h3>
+          <form id="qrUploadForm" action="/scan_qr" method="POST" enctype="multipart/form-data" class="space-y-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="border-2 border-dashed border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-all duration-200" onclick="document.getElementById('qrFile').click()">
+              <span class="material-symbols-outlined text-on-surface-variant text-4xl mb-2">qr_code</span>
+              <p class="text-sm text-on-surface font-semibold text-center">Click to choose or drag file here</p>
+              <p class="text-xs text-on-surface-variant/60 text-center mt-1">PNG, JPG, WEBP, or PDF (Max 10 MB)</p>
+              <input type="file" id="qrFile" name="file" accept=".png,.jpg,.jpeg,.webp,.pdf" class="hidden" onchange="updateFileName(this, 'qrFileName')"/>
+              <p id="qrFileName" class="text-xs font-semibold text-primary mt-3 hidden"></p>
+            </div>
+            <button type="submit" class="w-full flex items-center justify-center gap-2 bg-primary text-on-primary py-3 rounded-xl text-sm font-semibold hover:bg-primary/80 transition-all shadow-[0_0_15px_rgba(173,198,255,0.2)] hover:scale-[1.01] duration-150">
+              <span class="material-symbols-outlined text-base">troubleshoot</span> Scan for QR Payloads
+            </button>
+          </form>
+        </div>
+
+        <!-- Scan Results -->
+        <div class="lg:col-span-7 space-y-6">
+          {% if qr_result %}
+            {% if qr_result.status == 'success' %}
+              <!-- Extracted URLs -->
+              <div class="glass-panel rounded-2xl p-6 slide-in">
+                <h3 class="text-sm font-bold text-on-surface flex items-center gap-2 mb-4 border-b border-white/8 pb-3">
+                  <span class="material-symbols-outlined text-primary">link</span> Decoded QR Payloads ({{ qr_result.urls_found|length }})
+                </h3>
+                {% if qr_result.urls_found %}
+                  <div class="space-y-4">
+                    {% for item in qr_result.urls_checked %}
+                      <div class="bg-surface-container/50 border border-white/5 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                        <div class="min-w-0">
+                          <code class="text-xs text-on-surface-variant break-all font-semibold block">{{ item.url }}</code>
+                          {% if item.extra_metrics and item.extra_metrics.ai_summary %}
+                            <p class="text-xs text-on-surface-variant/80 mt-1 italic">{{ item.extra_metrics.ai_summary }}</p>
+                          {% endif %}
+                        </div>
+                        <div class="flex items-center gap-2.5 shrink-0 self-end md:self-auto">
+                          <span class="text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider
+                            {% if item.prediction_label == 'Safe' %}
+                              bg-secondary/10 text-secondary border border-secondary/20
+                            {% else %}
+                              bg-error/10 text-error border border-error/20
+                            {% endif %}">
+                            {{ item.prediction_label }}
+                          </span>
+                          <button onclick="recheckUrl('{{ item.url | e }}')" class="text-xs text-primary border border-primary/20 bg-primary/5 hover:bg-primary/15 px-2.5 py-1 rounded-lg transition-all">
+                            Check Details
+                          </button>
+                        </div>
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% else %}
+                  <p class="text-sm text-on-surface-variant text-center py-4">No valid URLs found in any detected QR codes.</p>
+                {% endif %}
+              </div>
+            {% else %}
+              <div class="flex items-start gap-3 bg-error/10 border border-error/25 rounded-xl px-4 py-3 slide-in">
+                <span class="material-symbols-outlined text-error text-base mt-0.5">error</span>
+                <p class="text-sm text-error font-semibold">{{ qr_result.message }}</p>
+              </div>
+            {% endif %}
+          {% else %}
+            <div class="glass-panel rounded-2xl p-8 flex flex-col items-center justify-center text-center text-on-surface-variant min-h-[250px]">
+              <span class="material-symbols-outlined text-5xl text-on-surface-variant/30 mb-3">qr_code</span>
+              <p class="text-sm">No QR scans run yet. Upload an image or PDF to extract URL payloads.</p>
+            </div>
+          {% endif %}
         </div>
       </div>
     </div>
@@ -499,6 +813,21 @@
       document.getElementById('chatInput').value=q;
       sendChatMessage();
     }
+
+    function updateFileName(input, targetId) {
+      const el = document.getElementById(targetId);
+      if (input.files && input.files[0]) {
+        el.textContent = 'Selected: ' + input.files[0].name;
+        el.classList.remove('hidden');
+      } else {
+        el.classList.add('hidden');
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const activeTab = '{{ active_tab or "dashboard" }}';
+      showSection(activeTab);
+    });
   </script>
 
   <script type="module">

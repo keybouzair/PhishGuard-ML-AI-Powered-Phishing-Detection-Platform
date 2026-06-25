@@ -36,8 +36,11 @@ class EmailIntelligenceService:
         # Regex to extract URLs strictly starting with http/https
         self.url_pattern = re.compile(
             r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
-        )    def _extract_text_body(self, msg: EmailMessage) -> str:
+        )
+
+    def _extract_text_body(self, msg: EmailMessage) -> str:
         """Extract plain text and HTML bodies from the email with recursion/part caps (B-15)."""
+
         body_text = ""
         total_parts = 0
         max_parts = 100
@@ -171,4 +174,5 @@ class EmailIntelligenceService:
             return {
                 "status": "error",
                 "message": f"Failed to parse email file: {str(e)}"
-            }         }
+            }
+

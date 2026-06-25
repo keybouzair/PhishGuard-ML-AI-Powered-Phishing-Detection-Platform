@@ -17,6 +17,12 @@ from ml.inference_engine import InferenceEngine
 from services.cache_service import cache_service
 from services.enrichment_service import get_cached_domain_metrics
 from workers.tasks.enrich_url import enqueue_url_enrichment
+import asyncio
+from services.visual_analysis import VisualAnalysisService
+from services.llm_risk_engine import llm_risk_engine
+from services.email_parser import EmailIntelligenceService
+from services.qr_scanner import QRScannerService
+
 
 # B-04: Security import MUST NOT fail silently — rate limiting is a safety control
 try:
@@ -184,6 +190,24 @@ if inference_engine.is_available():
     logger.info("Inference engine ready (source=%s)", inference_engine.source)
 else:
     logger.warning("No ML model available; heuristic fallback will be used")
+
+# Initialize Advanced Scanning Services
+visual_service = VisualAnalysisService()
+email_parser_service = EmailIntelligenceService()
+qr_scanner_service = QRScannerService(max_file_size_mb=10)
+
+def run_async(coro):
+    """Safely execute an async coroutine synchronously inside Flask threads."""
+    try:
+        return asyncio.run(coro)
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            return loop.run_until_complete(coro)
+        finally:
+            loop.close()
+
 
 
 # C-32: Dangerous URI schemes that must never be accepted
@@ -441,6 +465,63 @@ def get_extra_domain_metrics(url):
     return get_cached_domain_metrics(url)
 
 
+def enrich_with_ai_soc_metrics(url, prediction_score, extra_metrics):
+    """Integrate visual brand analysis and LLM risk correlation into the result's extra_metrics."""
+    if extra_metrics is None:
+        extra_metrics = {}
+        
+    ai_summary = "No significant risk detected."
+    ai_action = "Safe" if prediction_score < 30 else "Monitor"
+    visual_brand = None
+    visual_score = 0
+    visual_reason = ""
+    
+    try:
+        # Run visual analysis
+        visual_report = run_async(visual_service.analyze_url(url))
+        if visual_report:
+            visual_brand = visual_report.get("brand_detected")
+            visual_score = visual_report.get("impersonation_score", 0)
+            visual_reason = visual_report.get("reason", "")
+    except Exception as e:
+        logger.error(f"Error running visual service in predict: {e}")
+        
+    try:
+        # Run threat intelligence check to get detections count
+        vt_count = 0
+        if THREAT_INTEL_ENABLED and threat_intel:
+            ti_res = threat_intel.check_url(url)
+            sources = ti_res.get('sources', {})
+            for src_name, src_data in sources.items():
+                if src_data.get('is_malicious'):
+                    vt_count += 1
+                    
+        # Call LLM risk engine
+        inputs = {
+            "ml_score": prediction_score,
+            "threat_intel_flags": vt_count,
+            "visual_impersonation": {
+                "visual_clone_score": visual_score,
+                "suspected_brand": visual_brand,
+                "reason": visual_reason
+            },
+            "email_urgency": 0
+        }
+        risk_intel = run_async(llm_risk_engine.generate_risk_intelligence(inputs))
+        if risk_intel:
+            ai_summary = risk_intel.get("risk_summary", ai_summary)
+            ai_action = risk_intel.get("recommended_action", ai_action)
+    except Exception as e:
+        logger.error(f"Error running LLM risk engine in predict: {e}")
+        
+    extra_metrics['ai_summary'] = ai_summary
+    extra_metrics['ai_action'] = ai_action
+    extra_metrics['visual_brand'] = visual_brand
+    extra_metrics['visual_score'] = visual_score
+    extra_metrics['visual_reason'] = visual_reason
+    return extra_metrics
+
+
 def predict(url, username='anonymous'):
     """Predict the phishing risk of the given URL with detailed analysis."""
     valid, normalized_url, error = validate_and_normalize_url(url)
@@ -455,6 +536,12 @@ def predict(url, username='anonymous'):
 
     if trusted:
         extra_metrics = get_extra_domain_metrics(url)
+        extra_metrics['ai_summary'] = "Trusted domain. Access is verified safe."
+        extra_metrics['ai_action'] = "Safe"
+        extra_metrics['visual_brand'] = None
+        extra_metrics['visual_score'] = 0
+        extra_metrics['visual_reason'] = "This domain is part of the pre-approved trusted domains list."
+        
         safe_result = {
             'url': url,
             'prediction_label': 'Safe',
@@ -494,6 +581,7 @@ def predict(url, username='anonymous'):
             pass
 
         extra_metrics = get_extra_domain_metrics(url)
+        extra_metrics = enrich_with_ai_soc_metrics(url, prediction_score, extra_metrics)
 
         return {
             'url': url,
@@ -521,6 +609,7 @@ def predict(url, username='anonymous'):
             pass
 
         extra_metrics = get_extra_domain_metrics(url)
+        extra_metrics = enrich_with_ai_soc_metrics(url, prediction_score, extra_metrics)
 
         return {
             'url': url,
@@ -540,6 +629,7 @@ def predict(url, username='anonymous'):
         db.save_url_check(username, url, prediction_label_text, prediction_score, 1 if is_suspicious else 0)
 
         extra_metrics = get_extra_domain_metrics(url)
+        extra_metrics = enrich_with_ai_soc_metrics(url, prediction_score, extra_metrics)
 
         return {
             'url': url,
@@ -548,6 +638,7 @@ def predict(url, username='anonymous'):
             'risk_analysis': risk_analysis,
             'extra_metrics': extra_metrics
         }
+
 
 
 app = Flask(__name__)
@@ -957,6 +1048,156 @@ def user_dashboard():
                          history=history,
                          risk_analysis=risk_analysis,
                          extra_metrics=extra_metrics)
+
+
+@app.route("/scan_email", methods=["POST"])
+def scan_email():
+    if 'user' not in session:
+        return redirect(url_for('login_options'))
+    if session.get('role') == 'admin':
+        return redirect(url_for('admin_dashboard'))
+    
+    username = session['user']
+    stats = db.get_user_stats(username)
+    history = db.get_user_url_checks(username, 10)
+    
+    email_result = None
+    
+    file = request.files.get('file')
+    if not file or file.filename == '':
+        email_result = {
+            "status": "error",
+            "message": "No file uploaded or selected."
+        }
+    elif not file.filename.lower().endswith('.eml'):
+        email_result = {
+            "status": "error",
+            "message": "Invalid file extension. Please upload a .eml file."
+        }
+    else:
+        try:
+            file_data = file.read()
+            if len(file_data) > 5 * 1024 * 1024:
+                email_result = {
+                    "status": "error",
+                    "message": "File size exceeds the maximum limit of 5 MB."
+                }
+            else:
+                raw_result = run_async(email_parser_service.parse_eml_file(file_data, file.filename))
+                if raw_result and raw_result.get('status') == 'success':
+                    urls_checked = []
+                    for url in raw_result.get('urls_extracted', []):
+                        try:
+                            pred_res = predict(url, username)
+                            urls_checked.append({
+                                'url': url,
+                                'prediction_label': pred_res.get('prediction_label'),
+                                'prediction_score': pred_res.get('prediction_score'),
+                                'extra_metrics': pred_res.get('extra_metrics')
+                            })
+                        except Exception as e:
+                            logger.error(f"Error checking url {url} in email scan: {e}")
+                            urls_checked.append({
+                                'url': url,
+                                'prediction_label': 'Error',
+                                'prediction_score': 0,
+                                'extra_metrics': None
+                            })
+                    raw_result['urls_checked'] = urls_checked
+                    email_result = raw_result
+                else:
+                    email_result = raw_result or {
+                        "status": "error",
+                        "message": "Failed to parse email file."
+                    }
+        except Exception as e:
+            logger.error(f"Error processing email scan: {e}")
+            email_result = {
+                "status": "error",
+                "message": f"An error occurred during email parsing: {str(e)}"
+            }
+            
+    return render_template("user_dashboard_v2.html",
+                         email_result=email_result,
+                         active_tab="email",
+                         total_checked=stats['total_checked'],
+                         safe_count=stats['safe_count'],
+                         unsafe_count=stats['unsafe_count'],
+                         safety_rate=stats['safety_rate'],
+                         history=history)
+
+
+@app.route("/scan_qr", methods=["POST"])
+def scan_qr():
+    if 'user' not in session:
+        return redirect(url_for('login_options'))
+    if session.get('role') == 'admin':
+        return redirect(url_for('admin_dashboard'))
+        
+    username = session['user']
+    stats = db.get_user_stats(username)
+    history = db.get_user_url_checks(username, 10)
+    
+    qr_result = None
+    
+    file = request.files.get('file')
+    if not file or file.filename == '':
+        qr_result = {
+            "status": "error",
+            "message": "No file uploaded or selected."
+        }
+    else:
+        try:
+            file_data = file.read()
+            if len(file_data) > 10 * 1024 * 1024:
+                qr_result = {
+                    "status": "error",
+                    "message": "File size exceeds the maximum limit of 10 MB."
+                }
+            else:
+                raw_result = run_async(qr_scanner_service.extract_urls_from_file(file_data, file.filename))
+                if raw_result and raw_result.get('status') == 'success':
+                    urls_checked = []
+                    for url in raw_result.get('urls_found', []):
+                        try:
+                            pred_res = predict(url, username)
+                            urls_checked.append({
+                                'url': url,
+                                'prediction_label': pred_res.get('prediction_label'),
+                                'prediction_score': pred_res.get('prediction_score'),
+                                'extra_metrics': pred_res.get('extra_metrics')
+                            })
+                        except Exception as e:
+                            logger.error(f"Error checking url {url} in QR scan: {e}")
+                            urls_checked.append({
+                                'url': url,
+                                'prediction_label': 'Error',
+                                'prediction_score': 0,
+                                'extra_metrics': None
+                            })
+                    raw_result['urls_checked'] = urls_checked
+                    qr_result = raw_result
+                else:
+                    qr_result = raw_result or {
+                        "status": "error",
+                        "message": "Failed to extract QR code URLs."
+                    }
+        except Exception as e:
+            logger.error(f"Error processing QR scan: {e}")
+            qr_result = {
+                "status": "error",
+                "message": f"An error occurred during QR scanning: {str(e)}"
+            }
+            
+    return render_template("user_dashboard_v2.html",
+                         qr_result=qr_result,
+                         active_tab="qr",
+                         total_checked=stats['total_checked'],
+                         safe_count=stats['safe_count'],
+                         unsafe_count=stats['unsafe_count'],
+                         safety_rate=stats['safety_rate'],
+                         history=history)
+
 
 
 # ============== API ROUTES ==============
