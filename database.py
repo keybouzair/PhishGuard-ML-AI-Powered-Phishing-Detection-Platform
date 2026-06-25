@@ -89,65 +89,70 @@ def get_db():
 
 def init_db():
     """Initialize the database with all required tables"""
-    with get_db() as conn:
-        cursor = conn.cursor()
+    try:
+        logger.info(f"Initializing database at {DATABASE_PATH}")
+        with get_db() as conn:
+            cursor = conn.cursor()
 
-        # Users table
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT UNIQUE NOT NULL,
-                password TEXT NOT NULL,
-                email TEXT,
-                role TEXT DEFAULT 'user',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                last_login TIMESTAMP,
-                is_active INTEGER DEFAULT 1
-            )
-        ''')
+            # Users table
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    password TEXT NOT NULL,
+                    email TEXT,
+                    role TEXT DEFAULT 'user',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    last_login TIMESTAMP,
+                    is_active INTEGER DEFAULT 1
+                )
+            ''')
 
-        # URL Checks table
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS url_checks (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT NOT NULL,
-                url TEXT NOT NULL,
-                prediction_label TEXT,
-                prediction_score REAL,
-                is_phishing INTEGER,
-                checked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
+            # URL Checks table
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS url_checks (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT NOT NULL,
+                    url TEXT NOT NULL,
+                    prediction_label TEXT,
+                    prediction_score REAL,
+                    is_phishing INTEGER,
+                    checked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
 
-        # Blocklist table
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS blocklist (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                url TEXT UNIQUE NOT NULL,
-                added_by TEXT,
-                reason TEXT,
-                added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
+            # Blocklist table
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS blocklist (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    url TEXT UNIQUE NOT NULL,
+                    added_by TEXT,
+                    reason TEXT,
+                    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
 
-        # Activity Log table
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS activity_log (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT NOT NULL,
-                action TEXT NOT NULL,
-                details TEXT,
-                ip_address TEXT,
-                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
+            # Activity Log table
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS activity_log (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT NOT NULL,
+                    action TEXT NOT NULL,
+                    details TEXT,
+                    ip_address TEXT,
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
 
-        # A-03: Only seed demo users when explicitly opted-in
-        if os.environ.get('PHISHGUARD_CREATE_DEMO_USERS') == '1':
-            _seed_demo_users(cursor)
+            # A-03: Only seed demo users when explicitly opted-in
+            if os.environ.get('PHISHGUARD_CREATE_DEMO_USERS') == '1':
+                _seed_demo_users(cursor)
 
-        conn.commit()
-        logger.info("Database initialized successfully")
+            conn.commit()
+            logger.info("Database initialized successfully")
+    except Exception as e:
+        logger.error(f"Database initialization failed: {e}", exc_info=True)
+        raise
 
 
 def _seed_demo_users(cursor):

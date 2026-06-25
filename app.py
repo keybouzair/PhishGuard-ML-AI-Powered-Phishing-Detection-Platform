@@ -626,12 +626,21 @@ def add_request_observability_headers(response):
     return _apply_cors_headers(response)
 
 # Ensure directories exist
-if os.environ.get("VERCEL") == "1":
-    os.makedirs('/tmp/session_files', exist_ok=True)
-    os.makedirs('/tmp/logs', exist_ok=True)
-else:
-    os.makedirs('session_files', exist_ok=True)
-    os.makedirs('logs', exist_ok=True)
+try:
+    if os.environ.get("VERCEL") == "1":
+        session_dir = '/tmp/session_files'
+        logs_dir = '/tmp/logs'
+    else:
+        session_dir = 'session_files'
+        logs_dir = 'logs'
+    
+    os.makedirs(session_dir, exist_ok=True)
+    os.makedirs(logs_dir, exist_ok=True)
+    logger.info(f"Session directory: {session_dir}")
+    logger.info(f"Logs directory: {logs_dir}")
+except Exception as dir_err:
+    logger.error(f"Failed to create directories: {dir_err}", exc_info=True)
+    raise RuntimeError(f"Cannot create required directories: {dir_err}")
 
 
 # ============== AUTH ROUTES ==============
@@ -780,27 +789,54 @@ def google_login():
 
         # Use email prefix as the username (sanitised)
         username = re.sub(r'[^a-zA-Z0-9._-]', '_', email.split('@')[0])[:30] or 'user'
+        logger.info(f"google_login: sanitized username={username} from email={email}")
 
         # Auto-provision the user in our DB if they don't exist yet
-        existing = db.get_user(username)
+        try:
+            existing = db.get_user(username)
+            logger.info(f"google_login: get_user({username}) returned {bool(existing)}")
+        except Exception as db_err:
+            logger.error(f"google_login: get_user failed: {db_err}", exc_info=True)
+            raise
+
         if not existing:
             import hashlib
             # Create a deterministic placeholder password (user will never use it)
             placeholder_pw = hashlib.sha256(f"firebase-{uid}".encode()).hexdigest()
-            db.add_user(username, placeholder_pw, email=email, role='user')
+            try:
+                logger.info(f"google_login: adding user {username} with email {email}")
+                db.add_user(username, placeholder_pw, email=email, role='user')
+                logger.info(f"google_login: user {username} added successfully")
+            except Exception as add_err:
+                logger.error(f"google_login: add_user failed: {add_err}", exc_info=True)
+                raise
 
         # Create session
-        session['user'] = username
-        session['role'] = 'user'
-        session['firebase_uid'] = uid
-        session['display_name'] = name
+        try:
+            session['user'] = username
+            session['role'] = 'user'
+            session['firebase_uid'] = uid
+            session['display_name'] = name
+            logger.info(f"google_login: session created for {username}")
+        except Exception as sess_err:
+            logger.error(f"google_login: session creation failed: {sess_err}", exc_info=True)
+            raise
 
-        db.log_activity(username, provider_label, f'{provider_id} — {email}', request.remote_addr)
+        try:
+            db.log_activity(username, provider_label, f'{provider_id} — {email}', request.remote_addr)
+        except Exception as log_err:
+            logger.warning(f"google_login: log_activity failed (non-critical): {log_err}")
 
         return jsonify({'success': True, 'redirect': url_for('user_dashboard')})
 
     except Exception as e:
-        logger.warning("google_login error: %s", e)
+        import traceback
+        logger.error(
+            "google_login error: %s\n%s",
+            str(e),
+            traceback.format_exc(),
+            exc_info=True
+        )
         return jsonify({'success': False, 'message': 'Authentication failed. Please try again.'}), 401
 
 
