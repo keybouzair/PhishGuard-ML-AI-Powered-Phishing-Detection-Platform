@@ -160,10 +160,6 @@ def _seed_demo_users(cursor):
     default_users = [
         ('admin', hash_password('admin123'), 'admin@phishing.com', 'admin'),
         ('gamingkeybo', hash_password('admin@123@123'), 'gamingkeybo@gmail.com', 'admin'),
-        ('user1', hash_password('user123'), 'user1@example.com', 'user'),
-        ('user2', hash_password('password2'), 'user2@example.com', 'user'),
-        ('user3', hash_password('password3'), 'user3@example.com', 'user'),
-        ('user4', hash_password('password4'), 'user4@example.com', 'user'),
     ]
 
     for username, password, email, role in default_users:
