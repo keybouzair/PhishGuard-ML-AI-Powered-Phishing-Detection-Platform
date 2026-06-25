@@ -745,11 +745,16 @@ def logout():
     return redirect(url_for('login_options'))
 
 
-@app.route("/google_login", methods=["POST"])
+@app.route("/google_login", methods=["POST", "OPTIONS"])
 @csrf.exempt
 @rate_limit(max_requests=10, window_seconds=60)
 def google_login():
     """Accept a Firebase ID token from the client, verify it, and create a session."""
+    # Handle CORS preflight requests
+    if request.method == "OPTIONS":
+        response = jsonify({'ok': True})
+        return _apply_cors_headers(response), 200
+    
     import base64, json as _json
 
     data = request.get_json(silent=True) or {}
@@ -972,12 +977,16 @@ def api_system_status():
         },
     })
 
-@app.route("/api/check", methods=["POST"])
-@app.route("/check-url", methods=["POST"])
+@app.route("/api/check", methods=["POST", "OPTIONS"])
+@app.route("/check-url", methods=["POST", "OPTIONS"])
 @csrf.exempt
 @rate_limit(max_requests=120, window_seconds=60)
 def api_check_url():
     """API endpoint to check a URL"""
+    if request.method == "OPTIONS":
+        response = jsonify({'ok': True})
+        return _apply_cors_headers(response), 200
+    
     data = request.get_json(silent=True)
     if not isinstance(data, dict):
         return api_error('invalid_json', status=400, details='Request body must be valid JSON object')
@@ -1008,11 +1017,15 @@ def api_check_url():
         return api_error('prediction_failed', status=500, details=str(e))
 
 
-@app.route("/feedback", methods=["POST"])
+@app.route("/feedback", methods=["POST", "OPTIONS"])
 @csrf.exempt
 @rate_limit(max_requests=10, window_seconds=60)  # C-10: tighter rate limit on feedback
 def api_feedback():
     """Collect user feedback for model improvement workflow."""
+    if request.method == "OPTIONS":
+        response = jsonify({'ok': True})
+        return _apply_cors_headers(response), 200
+    
     data = request.get_json(silent=True)
     if not isinstance(data, dict):
         return api_error('invalid_json', status=400, details='Request body must be valid JSON object')
@@ -1101,11 +1114,15 @@ def api_add_to_blocklist():
     return jsonify({'success': False, 'message': 'URL already in blocklist'}), 400
 
 
-@app.route("/api/blocklist/remove", methods=["POST"])
-@app.route("/remove_from_blocklist", methods=["POST"])
+@app.route("/api/blocklist/remove", methods=["POST", "OPTIONS"])
+@app.route("/remove_from_blocklist", methods=["POST", "OPTIONS"])
 @csrf.exempt
 def api_remove_from_blocklist():
     """Remove URL from blocklist"""
+    if request.method == "OPTIONS":
+        response = jsonify({'ok': True})
+        return _apply_cors_headers(response), 200
+    
     if 'user' not in session or session.get('role') != 'admin':
         return jsonify({'success': False, 'message': 'Unauthorized'}), 403
     
@@ -1142,10 +1159,14 @@ def api_get_users():
     })
 
 
-@app.route("/api/users/add", methods=["POST"])
+@app.route("/api/users/add", methods=["POST", "OPTIONS"])
 @csrf.exempt
 def api_add_user():
     """Add a new user"""
+    if request.method == "OPTIONS":
+        response = jsonify({'ok': True})
+        return _apply_cors_headers(response), 200
+    
     if 'user' not in session or session.get('role') != 'admin':
         return jsonify({'success': False, 'message': 'Unauthorized'}), 403
     
@@ -1167,10 +1188,14 @@ def api_add_user():
     return jsonify({'success': False, 'message': 'Username already exists'}), 400
 
 
-@app.route("/api/users/update", methods=["POST"])
+@app.route("/api/users/update", methods=["POST", "OPTIONS"])
 @csrf.exempt
 def api_update_user():
     """Update a user"""
+    if request.method == "OPTIONS":
+        response = jsonify({'ok': True})
+        return _apply_cors_headers(response), 200
+    
     if 'user' not in session or session.get('role') != 'admin':
         return jsonify({'success': False, 'message': 'Unauthorized'}), 403
     
@@ -1202,10 +1227,14 @@ def api_update_user():
     return jsonify({'success': False, 'message': 'No updates provided'}), 400
 
 
-@app.route("/api/users/delete", methods=["POST"])
+@app.route("/api/users/delete", methods=["POST", "OPTIONS"])
 @csrf.exempt
 def api_delete_user():
     """Delete a user"""
+    if request.method == "OPTIONS":
+        response = jsonify({'ok': True})
+        return _apply_cors_headers(response), 200
+    
     if 'user' not in session or session.get('role') != 'admin':
         return jsonify({'success': False, 'message': 'Unauthorized'}), 403
     
