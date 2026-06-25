@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     
     # API Keys (Mocked defaults for testing, replace in production)
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "sk-mock-openai-key")
+    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+    HF_TOKEN: str = os.getenv("HF_TOKEN", "")
     VIRUSTOTAL_API_KEY: str = os.getenv("VIRUSTOTAL_API_KEY", "mock-vt-key")
     CLOUDFLARE_API_KEY: str = os.getenv("CLOUDFLARE_API_KEY", "mock-cf-key")
     

@@ -32,6 +32,8 @@ class Config:
     # Threat Intelligence APIs
     VIRUSTOTAL_API_KEY = os.environ.get('VIRUSTOTAL_API_KEY', '')
     GOOGLE_SAFE_BROWSING_API_KEY = os.environ.get('GOOGLE_SAFE_BROWSING_API_KEY', '')
+    GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
+    HF_TOKEN = os.environ.get('HF_TOKEN', '')
     URLHAUS_ENABLED = os.environ.get('URLHAUS_ENABLED', 'True').lower() == 'true'
     PHISHTANK_ENABLED = os.environ.get('PHISHTANK_ENABLED', 'True').lower() == 'true'
     
