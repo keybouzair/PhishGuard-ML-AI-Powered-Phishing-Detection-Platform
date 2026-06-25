@@ -1,0 +1,332 @@
+<div id="diagnostic-suite-panel" class="glass-panel rounded-xl flex flex-col overflow-hidden">
+  <!-- Diagnostic Tabs -->
+  <div class="flex border-b border-white/10 bg-surface-container-low/50">
+    <button onclick="showDiagTab('url')" id="diag-btn-url" class="diag-tab-btn px-lg py-3 font-label-md text-label-md text-primary border-b-2 border-primary bg-primary/5 flex items-center gap-2 uppercase tracking-wider transition-colors outline-none">
+      <span class="material-symbols-outlined text-lg">link</span> URL Classifier
+    </button>
+    <button onclick="showDiagTab('qr')" id="diag-btn-qr" class="diag-tab-btn px-lg py-3 font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:bg-white/5 flex items-center gap-2 uppercase tracking-wider transition-colors outline-none">
+      <span class="material-symbols-outlined text-lg">description</span> Payload Sandbox (QR)
+    </button>
+    <button onclick="showDiagTab('email')" id="diag-btn-email" class="diag-tab-btn px-lg py-3 font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:bg-white/5 flex items-center gap-2 uppercase tracking-wider transition-colors outline-none">
+      <span class="material-symbols-outlined text-lg">mail</span> Header Analysis (EML)
+    </button>
+  </div>
+  
+  <div class="p-lg">
+    <!-- Sub-tab 1: URL Classifier -->
+    <div id="diag-url" class="diag-tab-panel">
+      <!-- Input Area -->
+      <form method="POST" action="/user_dashboard" class="flex flex-col md:flex-row gap-sm mb-xl">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <div class="flex-1 relative">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <span class="material-symbols-outlined text-on-surface-variant">http</span>
+          </div>
+          <input class="w-full bg-surface-container-lowest border border-white/10 rounded-lg py-3 pl-10 pr-4 text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary transition-all font-code-sm outline-none" 
+            type="url" name="url" required value="{{ url or '' }}" placeholder="https://login.micros0ft-update-security.com/auth"/>
+        </div>
+        <button type="submit" class="bg-primary text-on-primary hover:bg-primary-container px-lg py-3 rounded-lg font-label-md text-label-md uppercase tracking-wider transition-colors flex items-center justify-center gap-2 shrink-0 shadow-[0_0_15px_rgba(173,198,255,0.2)]">
+          <span class="material-symbols-outlined">troubleshoot</span> Analyze Payload
+        </button>
+      </form>
+
+      <!-- Results Panel -->
+      {% if prediction %}
+      {% set is_safe = (prediction == 'SAFE') %}
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-lg bg-surface-container/30 border border-white/5 rounded-lg p-lg slide-in">
+        <!-- Gauge -->
+        <div class="md:col-span-4 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-white/5 pb-5 md:pb-0 md:pr-lg">
+          <div class="relative w-40 h-40 flex items-center justify-center">
+            <div class="absolute inset-0 rounded-full" style="background: conic-gradient({{ '#4edea3' if is_safe else '#ffb4ab' }} 0% {{ confidence }}%, #353438 {{ confidence }}% 100%)"></div>
+            <div class="absolute inset-2 bg-surface-container-low rounded-full flex flex-col items-center justify-center border border-white/5 shadow-inner">
+              <span class="font-display-lg text-display-lg {{ 'text-secondary' if is_safe else 'text-error' }} leading-none">{{ confidence }}<span class="text-xl">%</span></span>
+              <span class="font-label-md text-label-md {{ 'text-secondary' if is_safe else 'text-error' }} uppercase tracking-widest mt-1">{{ prediction }}</span>
+            </div>
+          </div>
+          <p class="font-body-md text-body-md text-on-surface-variant mt-4 text-center">Confidence Score</p>
+        </div>
+        
+        <!-- GenAI Explanation -->
+        <div class="md:col-span-8 flex flex-col justify-center md:pl-2">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="material-symbols-outlined text-primary">auto_awesome</span>
+            <h3 class="font-title-lg text-title-lg text-on-surface">GenAI Risk Explanation</h3>
+          </div>
+          <div class="bg-surface-variant/50 border border-white/5 rounded-lg p-md relative overflow-hidden">
+            <div class="absolute left-0 top-0 bottom-0 w-1 {{ 'bg-secondary' if is_safe else 'bg-error' }}"></div>
+            <p class="font-body-md text-body-md text-on-surface leading-relaxed font-code-sm">
+              {{ extra_metrics.ai_summary or "No explanation generated." }}
+            </p>
+          </div>
+          
+          <div class="mt-4 flex flex-wrap gap-3">
+            {% if risk_analysis and risk_analysis.risks %}
+              {% for risk in risk_analysis.risks[:3] %}
+                <span class="bg-error/10 text-error border border-error/20 px-2 py-1 rounded font-code-sm text-[11px] uppercase tracking-wider">{{ risk.type }}</span>
+              {% endfor %}
+            {% endif %}
+            {% if is_safe %}
+              <span class="bg-secondary/10 text-secondary border border-secondary/20 px-2 py-1 rounded font-code-sm text-[11px] uppercase tracking-wider">Verified Safe</span>
+            {% else %}
+              <span class="bg-error/10 text-error border border-error/20 px-2 py-1 rounded font-code-sm text-[11px] uppercase tracking-wider">High Risk</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      
+      <!-- AI & SOC Risk Correlation Details -->
+      {% if extra_metrics and (extra_metrics.visual_brand or extra_metrics.visual_reason) %}
+      <div class="mt-6 p-lg bg-surface-container/20 border border-white/5 rounded-lg slide-in">
+        <h4 class="font-title-lg text-title-lg text-primary mb-3 flex items-center gap-2">
+          <span class="material-symbols-outlined">psychology</span> SOC Visual Analysis correlation
+        </h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm leading-relaxed">
+          <div class="bg-surface-container/60 p-4 rounded-lg border border-white/5">
+            <h5 class="text-xs uppercase text-on-surface-variant font-bold mb-2">Visual Abuse Flag</h5>
+            {% if extra_metrics.visual_brand %}
+              <p class="text-error font-bold mb-1">Brand detected: {{ extra_metrics.visual_brand }}</p>
+              <div class="flex items-center justify-between text-xs text-on-surface-variant mb-1 mt-2">
+                <span>Impersonation similarity</span>
+                <span class="font-bold text-error">{{ extra_metrics.visual_score }}%</span>
+              </div>
+              <div class="w-full bg-surface-variant h-1.5 rounded-full overflow-hidden mb-2">
+                <div class="h-full bg-error rounded-full" style="width: {{ extra_metrics.visual_score }}%"></div>
+              </div>
+            {% else %}
+              <p class="text-secondary font-bold mb-1">No Brand detected</p>
+            {% endif %}
+            <p class="text-xs text-on-surface-variant mt-2">{{ extra_metrics.visual_reason }}</p>
+          </div>
+          
+          <div class="bg-surface-container/60 p-4 rounded-lg border border-white/5">
+            <h5 class="text-xs uppercase text-on-surface-variant font-bold mb-2">SOC Remediation Recommendation</h5>
+            <p class="text-on-surface font-semibold mb-2">Recommended mitigation posture:</p>
+            <span class="text-xs font-bold px-2.5 py-1 rounded-lg uppercase tracking-wider 
+              {% if 'Block' in extra_metrics.ai_action or 'Takedown' in extra_metrics.ai_action %}
+                bg-error/15 text-error border border-error/20
+              {% elif 'Monitor' in extra_metrics.ai_action or 'sandbox' in extra_metrics.ai_action %}
+                bg-primary/15 text-primary border border-primary/20
+              {% else %}
+                bg-secondary/15 text-secondary border border-secondary/20
+              {% endif %}">
+              {{ extra_metrics.ai_action }}
+            </span>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      {% else %}
+      <!-- Placeholder when no URL is analyzed yet -->
+      <div class="glass-panel rounded-lg p-lg flex flex-col items-center justify-center text-center text-on-surface-variant/70 min-h-[200px]">
+        <span class="material-symbols-outlined text-4xl mb-2">radar</span>
+        <p class="text-sm">Awaiting payload. Enter a URL above and click Analyze Payload to inspect security dispatches.</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Sub-tab 2: Payload Sandbox (QR Scanner) -->
+    <div id="diag-qr" class="diag-tab-panel hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+        <div class="lg:col-span-5 bg-surface-container/40 rounded-lg p-md border border-white/5">
+          <h3 class="font-semibold text-on-surface flex items-center gap-2 mb-4">
+            <span class="material-symbols-outlined text-primary">qr_code_scanner</span> Upload Image or PDF
+          </h3>
+          <form action="/scan_qr" method="POST" enctype="multipart/form-data" class="space-y-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="border-2 border-dashed border-white/10 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-all duration-200" onclick="document.getElementById('qrFileSub').click()">
+              <span class="material-symbols-outlined text-on-surface-variant text-4xl mb-2">qr_code</span>
+              <p class="text-xs text-on-surface font-semibold text-center">Click to choose or drag QR payload here</p>
+              <p class="text-[10px] text-on-surface-variant/60 text-center mt-1">PNG, JPG, WEBP, or PDF (Max 10 MB)</p>
+              <input type="file" id="qrFileSub" name="file" accept=".png,.jpg,.jpeg,.webp,.pdf" class="hidden" onchange="updateFileName(this, 'qrFileNameSub')"/>
+              <p id="qrFileNameSub" class="text-xs font-semibold text-primary mt-3 hidden"></p>
+            </div>
+            <button type="submit" class="w-full bg-primary text-on-primary hover:bg-primary-container py-3 rounded-lg font-label-md text-label-md uppercase tracking-wider transition-colors flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(173,198,255,0.2)]">
+              <span class="material-symbols-outlined text-sm">troubleshoot</span> Scan QR Code
+            </button>
+          </form>
+        </div>
+
+        <div class="lg:col-span-7">
+          {% if qr_result %}
+            {% if qr_result.status == 'success' %}
+              <div class="bg-surface-container/30 border border-white/5 rounded-lg p-md space-y-4 slide-in">
+                <h4 class="font-semibold text-primary border-b border-white/8 pb-2 flex items-center gap-2">
+                  <span class="material-symbols-outlined text-sm">link</span> Decoded QR Payloads ({{ qr_result.urls_found|length }})
+                </h4>
+                {% if qr_result.urls_found %}
+                  <div class="space-y-3">
+                    {% for item in qr_result.urls_checked %}
+                      <div class="bg-surface-container-low p-3 rounded border border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-2">
+                        <div class="min-w-0">
+                          <code class="text-xs text-on-surface font-semibold break-all">{{ item.url }}</code>
+                          {% if item.extra_metrics and item.extra_metrics.ai_summary %}
+                            <p class="text-[11px] text-on-surface-variant/80 mt-1 italic">{{ item.extra_metrics.ai_summary }}</p>
+                          {% endif %}
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                          <span class="text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider
+                            {% if item.prediction_label == 'Safe' %}
+                              bg-secondary/10 text-secondary border border-secondary/20
+                            {% else %}
+                              bg-error/10 text-error border border-error/20
+                            {% endif %}">
+                            {{ item.prediction_label }}
+                          </span>
+                          <button onclick="recheckUrl('{{ item.url | e }}')" class="text-[10px] text-primary border border-primary/20 bg-primary/5 hover:bg-primary/15 px-2 py-1 rounded transition-all">
+                            Verify
+                          </button>
+                        </div>
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% else %}
+                  <p class="text-xs text-on-surface-variant">No URLs found in the QR code image payload.</p>
+                {% endif %}
+              </div>
+            {% else %}
+              <div class="bg-error/10 border border-error/20 rounded p-md text-error text-xs flex items-center gap-2 slide-in">
+                <span class="material-symbols-outlined">error</span>
+                <p>{{ qr_result.message }}</p>
+              </div>
+            {% endif %}
+          {% else %}
+            <div class="bg-surface-container-low rounded-lg p-lg border border-white/5 flex flex-col items-center justify-center text-center text-on-surface-variant/70 min-h-[220px]">
+              <span class="material-symbols-outlined text-4xl mb-2">qr_code</span>
+              <p class="text-xs">No QR payload checked. Upload files containing QR codes to verify their redirections.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Sub-tab 3: Header Analysis (Email Parser) -->
+    <div id="diag-email" class="diag-tab-panel hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+        <div class="lg:col-span-5 bg-surface-container/40 rounded-lg p-md border border-white/5">
+          <h3 class="font-semibold text-on-surface flex items-center gap-2 mb-4">
+            <span class="material-symbols-outlined text-primary">mail</span> Upload EML File
+          </h3>
+          <form action="/scan_email" method="POST" enctype="multipart/form-data" class="space-y-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="border-2 border-dashed border-white/10 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-all duration-200" onclick="document.getElementById('emailFileSub').click()">
+              <span class="material-symbols-outlined text-on-surface-variant text-4xl mb-2">upload_file</span>
+              <p class="text-xs text-on-surface font-semibold text-center">Click to choose or drag EML payload here</p>
+              <p class="text-[10px] text-on-surface-variant/60 text-center mt-1">Maximum file size: 5 MB</p>
+              <input type="file" id="emailFileSub" name="file" accept=".eml" class="hidden" onchange="updateFileName(this, 'emailFileNameSub')"/>
+              <p id="emailFileNameSub" class="text-xs font-semibold text-primary mt-3 hidden"></p>
+            </div>
+            <button type="submit" class="w-full bg-primary text-on-primary hover:bg-primary-container py-3 rounded-lg font-label-md text-label-md uppercase tracking-wider transition-colors flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(173,198,255,0.2)]">
+              <span class="material-symbols-outlined text-sm">analytics</span> Analyze Email
+            </button>
+          </form>
+        </div>
+
+        <div class="lg:col-span-7 space-y-4">
+          {% if email_result %}
+            {% if email_result.status == 'success' %}
+              <!-- Metadata Details -->
+              <div class="bg-surface-container/30 border border-white/5 rounded-lg p-md space-y-2 text-xs slide-in">
+                <h4 class="font-semibold text-primary border-b border-white/8 pb-2 flex items-center gap-2">
+                  <span class="material-symbols-outlined text-sm">info</span> Email Header Details
+                </h4>
+                <div class="grid grid-cols-3 gap-1">
+                  <span class="text-on-surface-variant">Subject:</span>
+                  <span class="col-span-2 font-semibold text-on-surface">{{ email_result.metadata.subject or 'No Subject' }}</span>
+                </div>
+                <div class="grid grid-cols-3 gap-1">
+                  <span class="text-on-surface-variant">Sender:</span>
+                  <span class="col-span-2 font-semibold text-on-surface">{{ email_result.metadata.sender or 'Unknown' }}</span>
+                </div>
+                <div class="grid grid-cols-3 gap-1">
+                  <span class="text-on-surface-variant">Date:</span>
+                  <span class="col-span-2 font-semibold text-on-surface">{{ email_result.metadata.date or 'Unknown' }}</span>
+                </div>
+              </div>
+
+              <!-- NLP Risk Scores -->
+              <div class="bg-surface-container/30 border border-white/5 rounded-lg p-md space-y-4 slide-in">
+                <h4 class="font-semibold text-primary border-b border-white/8 pb-2 flex items-center gap-2">
+                  <span class="material-symbols-outlined text-sm">psychology</span> NLP &amp; Urgency Analysis
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <div class="flex items-center justify-between text-xs text-on-surface-variant mb-1">
+                      <span>Urgency Index</span>
+                      <span class="font-bold text-error">{{ email_result.risk_language_score }}%</span>
+                    </div>
+                    <div class="w-full bg-surface-variant h-1.5 rounded-full overflow-hidden">
+                      <div class="h-full bg-error rounded-full" style="width: {{ email_result.risk_language_score }}%"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex items-center justify-between text-xs text-on-surface-variant mb-1">
+                      <span>AI-Gen Probability</span>
+                      <span class="font-bold text-primary">{{ email_result.ai_generated_probability }}%</span>
+                    </div>
+                    <div class="w-full bg-surface-variant h-1.5 rounded-full overflow-hidden">
+                      <div class="h-full bg-primary rounded-full" style="width: {{ email_result.ai_generated_probability }}%"></div>
+                    </div>
+                  </div>
+                </div>
+                {% if email_result.matched_keywords %}
+                  <div class="flex flex-wrap gap-1.5 pt-2">
+                    {% for keyword in email_result.matched_keywords %}
+                      <span class="text-[9px] font-bold bg-error/10 text-error border border-error/20 px-2 py-0.5 rounded uppercase">{{ keyword }}</span>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+
+              <!-- Nested URLs -->
+              <div class="bg-surface-container/30 border border-white/5 rounded-lg p-md space-y-3 slide-in">
+                <h4 class="font-semibold text-primary border-b border-white/8 pb-2 flex items-center gap-2">
+                  <span class="material-symbols-outlined text-sm">link</span> Embedded URL checks ({{ email_result.urls_extracted|length }})
+                </h4>
+                {% if email_result.urls_extracted %}
+                  <div class="space-y-3">
+                    {% for item in email_result.urls_checked %}
+                      <div class="bg-surface-container-low p-3 rounded border border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-2">
+                        <div class="min-w-0">
+                          <code class="text-xs text-on-surface font-semibold break-all">{{ item.url }}</code>
+                          {% if item.extra_metrics and item.extra_metrics.ai_summary %}
+                            <p class="text-[11px] text-on-surface-variant/80 mt-1 italic">{{ item.extra_metrics.ai_summary }}</p>
+                          {% endif %}
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                          <span class="text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider
+                            {% if item.prediction_label == 'Safe' %}
+                              bg-secondary/10 text-secondary border border-secondary/20
+                            {% else %}
+                              bg-error/10 text-error border border-error/20
+                            {% endif %}">
+                            {{ item.prediction_label }}
+                          </span>
+                          <button onclick="recheckUrl('{{ item.url | e }}')" class="text-[10px] text-primary border border-primary/20 bg-primary/5 hover:bg-primary/15 px-2 py-1 rounded transition-all">
+                            Verify
+                          </button>
+                        </div>
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% else %}
+                  <p class="text-xs text-on-surface-variant">No URLs found embedded in email headers or body.</p>
+                {% endif %}
+              </div>
+            {% else %}
+              <div class="bg-error/10 border border-error/20 rounded p-md text-error text-xs flex items-center gap-2 slide-in">
+                <span class="material-symbols-outlined">error</span>
+                <p>{{ email_result.message }}</p>
+              </div>
+            {% endif %}
+          {% else %}
+            <div class="bg-surface-container-low rounded-lg p-lg border border-white/5 flex flex-col items-center justify-center text-center text-on-surface-variant/70 min-h-[220px]">
+              <span class="material-symbols-outlined text-4xl mb-2">mail</span>
+              <p class="text-xs">No email headers analyzed. Upload EML dispatch logs to sweep urgency alerts.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

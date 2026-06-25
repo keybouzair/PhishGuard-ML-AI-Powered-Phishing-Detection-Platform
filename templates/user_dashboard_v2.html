@@ -3,8 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>Dashboard — PhishGuard-ML</title>
-  <meta name="description" content="PhishGuard-ML user dashboard. Scan URLs for phishing threats and view your history."/>
+  <title>PhishGuard-ML Dashboard</title>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet"/>
@@ -16,19 +15,92 @@
           colors: {
             "surface-container-low": "#1b1b1e",
             "primary": "#adc6ff",
-            "secondary": "#4edea3",
+            "secondary-fixed-dim": "#4edea3",
             "error": "#ffb4ab",
-            "on-surface": "#e4e1e6",
-            "on-surface-variant": "#c2c6d6",
-            "surface": "#131316",
-            "surface-container": "#1f1f22",
-            "surface-container-high": "#2a2a2d",
-            "surface-variant": "#353438",
-            "background": "#131316",
-            "on-primary": "#002e6a",
+            "on-secondary-fixed": "#002113",
+            "on-tertiary-container": "#5c0008",
             "on-secondary": "#003824",
+            "tertiary-fixed-dim": "#ffb3ad",
+            "on-error-container": "#ffdad6",
+            "on-tertiary-fixed": "#410004",
+            "secondary": "#4edea3",
+            "surface-container-high": "#2a2a2d",
+            "on-secondary-fixed-variant": "#005236",
+            "on-tertiary-fixed-variant": "#930013",
+            "primary-fixed-dim": "#adc6ff",
+            "inverse-on-surface": "#303033",
+            "on-primary-fixed-variant": "#004395",
+            "on-surface": "#e4e1e6",
+            "surface-tint": "#adc6ff",
+            "inverse-primary": "#005ac2",
+            "primary-fixed": "#d8e2ff",
+            "on-primary-container": "#00285d",
+            "on-error": "#690005",
+            "tertiary-fixed": "#ffdad7",
+            "on-primary-fixed": "#001a42",
+            "on-background": "#e4e1e6",
+            "secondary-container": "#00a572",
+            "surface": "#131316",
+            "inverse-surface": "#e4e1e6",
+            "secondary-fixed": "#6ffbbe",
+            "on-surface-variant": "#c2c6d6",
+            "surface-container": "#1f1f22",
+            "surface-container-lowest": "#0e0e11",
+            "tertiary": "#ffb3ad",
+            "primary-container": "#4d8eff",
+            "on-primary": "#002e6a",
+            "surface-variant": "#353438",
+            "surface-bright": "#39393c",
+            "tertiary-container": "#ff5451",
+            "surface-container-highest": "#353438",
+            "on-tertiary": "#68000a",
+            "on-secondary-container": "#00311f",
+            "outline-variant": "#424754",
+            "outline": "#8c909f",
+            "background": "#131316",
+            "surface-dim": "#131316",
+            "error-container": "#93000a"
           },
-          fontFamily: { sans: ["Geist","sans-serif"] }
+          borderRadius: {
+            "DEFAULT": "0.125rem",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+          },
+          spacing: {
+            "gutter": "20px",
+            "xl": "32px",
+            "xs": "4px",
+            "base": "4px",
+            "lg": "24px",
+            "sm": "8px",
+            "margin-desktop": "40px",
+            "margin-mobile": "16px",
+            "md": "16px"
+          },
+          fontFamily: {
+            "sans": ["Geist", "sans-serif"],
+            "headline-lg": ["Geist"],
+            "label-md": ["Geist"],
+            "title-lg": ["Geist"],
+            "headline-md": ["Geist"],
+            "headline-lg-mobile": ["Geist"],
+            "code-sm": ["Geist"],
+            "body-lg": ["Geist"],
+            "body-md": ["Geist"],
+            "display-lg": ["Geist"]
+          },
+          fontSize: {
+            "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+            "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+            "title-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+            "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+            "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+            "code-sm": ["12px", {"lineHeight": "18px", "fontWeight": "400"}],
+            "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+            "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+            "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+          }
         }
       }
     }
@@ -36,583 +108,397 @@
   <style>
     * { font-family: 'Geist', sans-serif; }
     .glass-panel {
-      background-color: rgba(27,27,30,0.80);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border: 1px solid rgba(255,255,255,0.09);
+      background-color: rgba(27, 27, 30, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
-    .glass-panel:hover { border-color: rgba(255,255,255,0.15); }
-    input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus {
-      -webkit-text-fill-color: #e4e1e6;
-      -webkit-box-shadow: 0 0 0px 1000px #1f1f22 inset;
+    .glass-panel:hover {
+      border-color: rgba(255, 255, 255, 0.3);
+      box-shadow: 0 0 15px rgba(173, 198, 255, 0.1);
+    }
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .animate-slow-pulse {
+      animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
     .section-panel { display: none; }
     .section-panel.active { display: block; }
-    .gauge-conic {
-      background: conic-gradient(
-        var(--gauge-color, #adc6ff) 0% var(--gauge-pct, 0%),
-        #353438 var(--gauge-pct, 0%) 100%
-      );
-      border-radius: 50%;
+    input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus {
+      -webkit-text-fill-color: #e4e1e6;
+      -webkit-box-shadow: 0 0 0px 1000px #1f1f22 inset;
     }
     @keyframes slideIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
     .slide-in { animation: slideIn 0.35s ease both; }
   </style>
 </head>
-<body class="bg-background text-on-surface antialiased overflow-x-hidden">
+<body class="bg-background text-on-background font-body-md antialiased overflow-x-hidden">
 
-  <!-- Background -->
-  <div class="fixed top-[-150px] right-[-150px] w-[500px] h-[500px] rounded-full bg-secondary/4 blur-[120px] pointer-events-none z-0"></div>
-  <div class="fixed bottom-[-100px] left-[-100px] w-[400px] h-[400px] rounded-full bg-primary/4 blur-[100px] pointer-events-none z-0"></div>
-
-  <!-- Sidebar -->
-  <nav id="sidebar" class="h-screen w-64 fixed left-0 top-0 bg-surface-container-low/90 backdrop-blur-xl border-r border-white/8 flex flex-col py-5 px-3 z-40 hidden md:flex">
-    <div class="mb-8 px-3 flex items-center gap-3">
-      <div class="w-9 h-9 rounded-xl bg-secondary/10 border border-secondary/20 flex items-center justify-center shrink-0">
-        <span class="material-symbols-outlined text-secondary text-xl">shield</span>
+  <!-- SideNavBar -->
+  <nav class="h-screen w-64 fixed left-0 top-0 bg-surface-container-low/80 backdrop-blur-xl border-r border-white/10 shadow-sm flex flex-col py-md px-sm z-40 hidden md:flex">
+    <div class="mb-xl px-sm flex items-center gap-3">
+      <div class="w-8 h-8 rounded bg-primary/20 flex items-center justify-center">
+        <span class="material-symbols-outlined text-primary text-xl">shield</span>
       </div>
       <div>
-        <h1 class="text-base font-bold text-primary leading-tight tracking-tight">PhishGuard-ML</h1>
-        <p class="text-[10px] text-secondary uppercase tracking-widest flex items-center gap-1 mt-0.5">
-          <span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span> Protected
+        <h1 class="font-headline-md text-headline-md font-bold text-primary tracking-tight">PhishGuard-ML</h1>
+        <p class="font-label-md text-label-md text-secondary uppercase tracking-wider mt-1 flex items-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span> Vigilance Active
         </p>
       </div>
     </div>
+    
     <div class="flex-1 space-y-1">
-      <button onclick="showSection('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-primary font-semibold bg-primary/8 border-r-2 border-primary text-sm transition-all duration-150">
-        <span class="material-symbols-outlined text-lg">dashboard</span> Dashboard
+      <button onclick="showSection('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-sm py-2 rounded-lg text-primary font-bold border-r-2 border-primary bg-primary/5 active:scale-95 transition-all duration-200 text-left">
+        <span class="material-symbols-outlined">dashboard</span> Dashboard
       </button>
-      <button onclick="showSection('email')" id="nav-email" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-white/5 text-sm transition-all duration-150">
-        <span class="material-symbols-outlined text-lg">mail</span> Email Parser
+      <button onclick="showSection('diag')" id="nav-diag" class="nav-btn w-full flex items-center gap-3 px-sm py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-white/5 active:scale-95 transition-all duration-200 text-left">
+        <span class="material-symbols-outlined">biotech</span> Diagnostic Suite
       </button>
-      <button onclick="showSection('qr')" id="nav-qr" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-white/5 text-sm transition-all duration-150">
-        <span class="material-symbols-outlined text-lg">qr_code_scanner</span> QR Scanner
+      <button onclick="showSection('hunter')" id="nav-hunter" class="nav-btn w-full flex items-center gap-3 px-sm py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-white/5 active:scale-95 transition-all duration-200 text-left">
+        <span class="material-symbols-outlined">security</span> Threat Hunter Agents
       </button>
-      <button onclick="showSection('history')" id="nav-history" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-white/5 text-sm transition-all duration-150">
-        <span class="material-symbols-outlined text-lg">history</span> History &amp; Logs
+      <button onclick="showSection('behavior')" id="nav-behavior" class="nav-btn w-full flex items-center gap-3 px-sm py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-white/5 active:scale-95 transition-all duration-200 text-left">
+        <span class="material-symbols-outlined">analytics</span> User Analytics
       </button>
-      <button onclick="showSection('settings')" id="nav-settings" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-white/5 text-sm transition-all duration-150">
-        <span class="material-symbols-outlined text-lg">settings</span> Settings
+      <button onclick="showSection('history')" id="nav-history" class="nav-btn w-full flex items-center gap-3 px-sm py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-white/5 active:scale-95 transition-all duration-200 text-left">
+        <span class="material-symbols-outlined">history</span> History &amp; Logs
       </button>
-      <a href="/about" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-white/5 text-sm transition-all duration-150">
-        <span class="material-symbols-outlined text-lg">info</span> About
-      </a>
+      <button onclick="showSection('settings')" id="nav-settings" class="nav-btn w-full flex items-center gap-3 px-sm py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-white/5 active:scale-95 transition-all duration-200 text-left">
+        <span class="material-symbols-outlined">settings</span> Configuration
+      </button>
     </div>
-    <div class="pt-4 border-t border-white/8">
-      <a href="/logout" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-on-surface-variant hover:text-error hover:bg-error/5 text-sm transition-all duration-150">
-        <span class="material-symbols-outlined text-lg">logout</span> Logout
+    
+    <div class="mt-auto pt-md border-t border-white/5 space-y-2">
+      <button onclick="deployAgent()" class="w-full bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container font-label-md text-label-md py-2 rounded transition-colors uppercase tracking-wider flex items-center justify-center gap-2">
+        <span class="material-symbols-outlined text-[16px]">rocket_launch</span> Deploy Agent
+      </button>
+      <a href="/logout" class="w-full text-on-surface-variant hover:text-error hover:bg-error/5 py-2 rounded transition-colors font-label-md text-label-md uppercase tracking-wider flex items-center justify-center gap-2 border border-white/5">
+        <span class="material-symbols-outlined text-[16px]">logout</span> Logout
       </a>
     </div>
   </nav>
 
-  <!-- Top Bar -->
-  <header class="h-16 fixed top-0 right-0 left-0 md:left-64 z-50 bg-surface/80 backdrop-blur-xl border-b border-white/8 flex justify-between items-center px-6">
-    <button class="md:hidden text-on-surface-variant hover:text-on-surface" onclick="document.getElementById('sidebar').classList.toggle('hidden')">
-      <span class="material-symbols-outlined">menu</span>
-    </button>
-    <div class="hidden sm:flex items-center w-full max-w-md bg-surface-container rounded-xl border border-white/10 focus-within:ring-1 focus-within:ring-secondary/50 px-3 py-2 gap-2 transition-all">
-      <span class="material-symbols-outlined text-on-surface-variant text-lg">search</span>
-      <input class="bg-transparent border-none focus:ring-0 text-sm text-on-surface w-full placeholder:text-on-surface-variant/50 outline-none" placeholder="Search your history…" type="text" oninput="handleTopSearch(this.value)"/>
+  <!-- TopNavBar -->
+  <header class="h-16 fixed top-0 right-0 left-0 md:left-64 z-50 bg-surface/80 backdrop-blur-xl border-b border-white/10 shadow-md flex justify-between items-center px-lg">
+    <div class="flex items-center w-full max-w-md bg-surface-container-low rounded border border-white/10 focus-within:ring-1 focus-within:ring-primary transition-all px-3 py-1.5">
+      <span class="material-symbols-outlined text-on-surface-variant text-lg mr-2">search</span>
+      <input class="bg-transparent border-none focus:ring-0 text-body-md text-on-surface w-full placeholder:text-on-surface-variant/50 p-0 outline-none" placeholder="Search indicators, IPs, domains..." type="text" oninput="handleTopSearch(this.value)"/>
     </div>
-    <div class="flex items-center gap-3 ml-4">
-      <div class="flex items-center gap-2.5 pl-3 border-l border-white/10">
+    
+    <div class="flex items-center gap-md">
+      <div class="flex items-center gap-sm border-r border-white/10 pr-md">
+        <button onclick="showToast('No new notifications','warning')" class="text-on-surface-variant hover:text-primary transition-colors p-1 relative flex items-center justify-center">
+          <span class="material-symbols-outlined">notifications</span>
+          <span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span>
+        </button>
+        <button onclick="showSection('settings')" class="text-on-surface-variant hover:text-primary transition-colors p-1 flex items-center justify-center">
+          <span class="material-symbols-outlined">settings</span>
+        </button>
+        <button onclick="showToast('Superuser session active','success')" class="text-on-surface-variant hover:text-primary transition-colors p-1 flex items-center justify-center">
+          <span class="material-symbols-outlined">admin_panel_settings</span>
+        </button>
+      </div>
+      
+      <div onclick="showSection('settings')" class="flex items-center gap-3 cursor-pointer group">
         <div class="text-right hidden sm:block">
-          <p class="text-xs font-semibold text-secondary">{{ session.get('user', 'User') }}</p>
-          <p class="text-[10px] text-on-surface-variant uppercase tracking-wider">Member</p>
+          <p class="font-label-md text-label-md text-primary group-hover:text-primary-fixed transition-colors">Admin: {{ session.get('user', 'User') }}</p>
+          <p class="font-code-sm text-[10px] text-on-surface-variant uppercase">Superuser</p>
         </div>
-        <div class="w-8 h-8 rounded-full bg-secondary/20 border border-secondary/30 flex items-center justify-center">
-          <span class="material-symbols-outlined text-secondary text-base">person</span>
+        <div class="w-8 h-8 rounded-full bg-surface-variant border border-white/10 overflow-hidden flex items-center justify-center">
+          <span class="material-symbols-outlined text-secondary text-lg">person</span>
         </div>
       </div>
     </div>
   </header>
 
-  <!-- Main -->
-  <main class="pt-20 pb-10 px-5 md:px-8 md:ml-64 min-h-screen relative z-10">
+  <!-- Main Content Canvas -->
+  <main class="pt-24 pb-lg px-margin-mobile md:px-margin-desktop md:ml-64 min-h-screen">
+    
+    <!-- Blocklist status notification -->
+    {% if blocklist_status %}
+    <div class="mb-5 flex items-start gap-3 bg-error/10 border border-error/25 rounded-xl px-4 py-3 slide-in">
+      <span class="material-symbols-outlined text-error text-base mt-0.5">block</span>
+      <p class="text-sm text-error font-semibold">{{ blocklist_status }}</p>
+    </div>
+    {% endif %}
 
     <!-- ───── DASHBOARD ───── -->
     <div id="section-dashboard" class="section-panel active">
       <div class="mb-6">
-        <h2 class="text-2xl font-bold text-on-surface">Welcome back, <span class="text-secondary">{{ session.get('user', 'User') }}</span> 👋</h2>
-        <p class="text-sm text-on-surface-variant mt-1">Your personal phishing protection dashboard.</p>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface">Command Overview</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant mt-1">Real-time telemetry and active threat mitigation status.</p>
       </div>
 
-      <!-- Blocklist status notification -->
-      {% if blocklist_status %}
-      <div class="mb-5 flex items-start gap-3 bg-error/10 border border-error/25 rounded-xl px-4 py-3">
-        <span class="material-symbols-outlined text-error text-base mt-0.5">block</span>
-        <p class="text-sm text-error font-semibold">{{ blocklist_status }}</p>
-      </div>
-      {% endif %}
-
-      <!-- Stats -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div class="glass-panel rounded-2xl p-5 hover:scale-[1.01] transition-all duration-200">
-          <div class="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-3">
-            <span class="material-symbols-outlined text-primary text-lg">link</span>
-          </div>
-          <p class="text-[11px] font-semibold text-on-surface-variant uppercase tracking-widest mb-1">Total Checked</p>
-          <p class="text-2xl font-bold text-on-surface">{{ total_checked }}</p>
-        </div>
-        <div class="glass-panel rounded-2xl p-5 hover:scale-[1.01] transition-all duration-200">
-          <div class="w-9 h-9 rounded-xl bg-secondary/10 border border-secondary/20 flex items-center justify-center mb-3">
-            <span class="material-symbols-outlined text-secondary text-lg">verified_user</span>
-          </div>
-          <p class="text-[11px] font-semibold text-on-surface-variant uppercase tracking-widest mb-1">Safe URLs</p>
-          <p class="text-2xl font-bold text-secondary">{{ safe_count }}</p>
-        </div>
-        <div class="glass-panel rounded-2xl p-5 hover:scale-[1.01] transition-all duration-200">
-          <div class="w-9 h-9 rounded-xl bg-error/10 border border-error/20 flex items-center justify-center mb-3">
-            <span class="material-symbols-outlined text-error text-lg">gpp_bad</span>
-          </div>
-          <p class="text-[11px] font-semibold text-on-surface-variant uppercase tracking-widest mb-1">Unsafe URLs</p>
-          <p class="text-2xl font-bold text-error">{{ unsafe_count }}</p>
-        </div>
-        <div class="glass-panel rounded-2xl p-5 hover:scale-[1.01] transition-all duration-200">
-          <div class="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-3">
-            <span class="material-symbols-outlined text-primary text-lg">percent</span>
-          </div>
-          <p class="text-[11px] font-semibold text-on-surface-variant uppercase tracking-widest mb-1">Safety Rate</p>
-          <p class="text-2xl font-bold text-primary">{{ safety_rate|default(0) }}%</p>
-        </div>
-      </div>
-
-      <!-- URL Check Panel -->
-      <div class="glass-panel rounded-2xl overflow-hidden mb-6">
-        <div class="flex border-b border-white/8 bg-surface-container/40">
-          <div class="flex items-center gap-2 px-5 py-3 text-xs font-semibold text-primary border-b-2 border-primary bg-primary/5 uppercase tracking-wider">
-            <span class="material-symbols-outlined text-base">link</span> URL Classifier
-          </div>
-        </div>
-        <div class="p-6">
-          <form method="POST" action="/user_dashboard" class="mb-6">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            <div class="flex flex-col sm:flex-row gap-3">
-              <div class="flex-1 relative">
-                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <span class="material-symbols-outlined text-on-surface-variant text-lg">http</span>
-                </div>
-                <input type="url" name="url" required
-                  value="{{ url or '' }}"
-                  placeholder="https://enter-url-to-scan.com"
-                  class="w-full bg-surface-container border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/40 transition-all"/>
-              </div>
-              <button type="submit" class="flex items-center justify-center gap-2 bg-primary text-on-primary px-6 py-3 rounded-xl text-sm font-semibold hover:bg-primary/80 transition-all shadow-[0_0_15px_rgba(173,198,255,0.2)] hover:scale-[1.02] duration-150 shrink-0">
-                <span class="material-symbols-outlined text-base">troubleshoot</span> Analyze URL
-              </button>
+      <!-- Row 1: Telemetry Metrics -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter mb-lg">
+        <!-- Metric 1: Total Scanned -->
+        <div class="glass-panel rounded-xl p-md flex flex-col justify-between transition-all group">
+          <div class="flex justify-between items-start mb-4">
+            <div class="w-8 h-8 rounded bg-surface-variant flex items-center justify-center border border-white/5">
+              <span class="material-symbols-outlined text-on-surface-variant text-lg">radar</span>
             </div>
-          </form>
+            <span class="font-code-sm text-code-sm text-secondary-fixed bg-secondary-fixed/10 px-2 py-0.5 rounded flex items-center gap-1">
+              <span class="material-symbols-outlined text-[12px]">trending_up</span> +12%
+            </span>
+          </div>
+          <div>
+            <p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-1">Total Scanned</p>
+            <p class="font-title-lg text-title-lg text-on-surface">{{ total_checked }}</p>
+          </div>
+          <div class="mt-3 h-8 w-full opacity-50 group-hover:opacity-100 transition-opacity">
+            <svg class="w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 20">
+              <path d="M0,15 Q10,5 20,10 T40,12 T60,5 T80,18 T100,2" fill="none" stroke="#6ffbbe" stroke-linecap="round" stroke-width="2"></path>
+              <path class="opacity-10" d="M0,20 L0,15 Q10,5 20,10 T40,12 T60,5 T80,18 T100,2 L100,20 Z" fill="#6ffbbe"></path>
+            </svg>
+          </div>
+        </div>
 
-          <!-- Result (server-rendered) -->
-          {% if prediction %}
-          {% set is_safe = (prediction == 'SAFE') %}
-          <div class="slide-in grid grid-cols-1 md:grid-cols-12 gap-5 bg-surface-container/30 border border-white/5 rounded-xl p-5">
-            <!-- Gauge -->
-            <div class="md:col-span-4 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-white/8 pb-5 md:pb-0 md:pr-5">
-              <div class="relative w-36 h-36 flex items-center justify-center mb-4">
-                <div class="absolute inset-0 rounded-full gauge-conic"
-                  style="--gauge-color: {{ '#4edea3' if is_safe else '#ffb4ab' }}; --gauge-pct: {{ confidence }}%"></div>
-                <div class="absolute inset-2 bg-surface-container rounded-full flex flex-col items-center justify-center border border-white/5">
-                  <span class="text-3xl font-bold {{ 'text-secondary' if is_safe else 'text-error' }}">{{ confidence }}<span class="text-base">%</span></span>
-                  <span class="text-[10px] font-bold {{ 'text-secondary' if is_safe else 'text-error' }} uppercase tracking-widest mt-0.5">{{ prediction }}</span>
+        <!-- Metric 2: Phishing Caught -->
+        <div class="glass-panel rounded-xl p-md flex flex-col justify-between transition-all group relative overflow-hidden">
+          <div class="absolute -right-4 -top-4 w-24 h-24 bg-error/5 rounded-full blur-2xl"></div>
+          <div class="flex justify-between items-start mb-4 relative z-10">
+            <div class="w-8 h-8 rounded bg-error/10 flex items-center justify-center border border-error/20">
+              <span class="material-symbols-outlined text-error text-lg">bug_report</span>
+            </div>
+            <span class="flex h-3 w-3 relative">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-3 w-3 bg-error"></span>
+            </span>
+          </div>
+          <div class="relative z-10">
+            <p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-1">Phishing Caught</p>
+            <p class="font-title-lg text-title-lg text-error">{{ unsafe_count }}</p>
+          </div>
+        </div>
+
+        <!-- Metric 3: Active Threat Hunters -->
+        <div class="glass-panel rounded-xl p-md flex flex-col justify-between transition-all group">
+          <div class="flex justify-between items-start mb-4">
+            <div class="w-8 h-8 rounded bg-primary/10 flex items-center justify-center border border-primary/20">
+              <span class="material-symbols-outlined text-primary text-lg">memory</span>
+            </div>
+          </div>
+          <div>
+            <p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-1">Active Threat Hunters</p>
+            <div class="flex items-center gap-2">
+              <p class="font-title-lg text-title-lg text-on-surface">12 Agents</p>
+              <span class="w-2 h-2 rounded-full bg-primary animate-slow-pulse"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metric 4: API Status -->
+        <div class="glass-panel rounded-xl p-md flex flex-col justify-between transition-all group">
+          <div class="mb-3">
+            <p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">External API Status</p>
+          </div>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-on-surface flex items-center gap-2">
+                <span class="material-symbols-outlined text-[14px] text-on-surface-variant">api</span> VirusTotal
+              </span>
+              <span class="bg-secondary/10 text-secondary border border-secondary/20 px-2 py-0.5 rounded text-[10px] uppercase font-bold flex items-center gap-1">
+                <span class="w-1 h-1 bg-secondary rounded-full animate-pulse"></span> UP
+              </span>
+            </div>
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-on-surface flex items-center gap-2">
+                <span class="material-symbols-outlined text-[14px] text-on-surface-variant">shield_locked</span> Google Safe Browsing
+              </span>
+              <span class="bg-secondary/10 text-secondary border border-secondary/20 px-2 py-0.5 rounded text-[10px] uppercase font-bold flex items-center gap-1">
+                <span class="w-1 h-1 bg-secondary rounded-full animate-pulse"></span> UP
+              </span>
+            </div>
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-on-surface flex items-center gap-2">
+                <span class="material-symbols-outlined text-[14px] text-on-surface-variant">network_node</span> AbuseIPDB
+              </span>
+              <span class="bg-secondary/10 text-secondary border border-secondary/20 px-2 py-0.5 rounded text-[10px] uppercase font-bold flex items-center gap-1">
+                <span class="w-1 h-1 bg-secondary rounded-full animate-pulse"></span> UP
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Diagnostic Panel Container -->
+      <div id="diagnostic-panel-container" class="mb-lg">
+        <!-- Diagnostic Suite Panel Rendered Inline -->
+        {% include 'diagnostic_suite_panel.html' %}
+      </div>
+
+      <!-- Row 3: Orchestration & Automation Hub -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
+        <!-- Left: Terminal -->
+        <div class="glass-panel rounded-xl p-lg flex flex-col h-[400px]">
+          <div class="flex items-center justify-between mb-4 pb-4 border-b border-white/10">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary">terminal</span>
+              <h3 class="font-title-lg text-title-lg text-on-surface">Threat Hunter Agent Activity</h3>
+            </div>
+            <div class="flex gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-surface-variant"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-surface-variant"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-primary animate-pulse"></span>
+            </div>
+          </div>
+          <div class="flex-1 bg-black/60 rounded-lg p-md overflow-y-auto scrollbar-hide border border-white/5 font-code-sm text-code-sm text-xs leading-relaxed text-on-surface-variant/90 space-y-2">
+            <div><span class="text-primary">[System]</span> Initializing Hunter Swarm Alpha...</div>
+            <div><span class="text-primary">[System]</span> Swarm active. Awaiting telemetry.</div>
+            <div class="text-secondary"><span class="text-secondary-fixed">[Agent-04]</span> Scanning emerging domain block [0x4A2B]...</div>
+            <div class="text-on-surface"><span class="text-secondary-fixed">[Agent-04]</span> Deep packet inspection normal.</div>
+            <div class="text-secondary"><span class="text-secondary-fixed">[Agent-12]</span> Intercepted SMTP relay anomaly.</div>
+            <div class="text-error"><span class="text-error">[Agent-12]</span> FOUND: malicious-domain-xyz.com payload matched signature_vx_99</div>
+            <div class="text-on-surface-variant"><span class="text-primary">[System]</span> Sending artifact to Diagnostic Suite...</div>
+            <div class="text-secondary"><span class="text-secondary-fixed">[Agent-07]</span> Scraping dark web pastebins for keyword 'internal-api'...</div>
+            <div class="text-on-surface"><span class="text-secondary-fixed">[Agent-07]</span> 0 results found in last cycle.</div>
+            <div class="text-secondary"><span class="text-secondary-fixed">[Agent-01]</span> Monitoring DNS flux on node beta...</div>
+            <div class="flex items-center text-primary mt-2">
+              <span class="mr-2">&gt;</span> <span class="w-2 h-4 bg-primary animate-pulse inline-block"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Response Orchestrator -->
+        <div class="glass-panel rounded-xl p-lg flex flex-col h-[400px]">
+          <div class="flex items-center gap-2 mb-6 border-b border-white/10 pb-4">
+            <span class="material-symbols-outlined text-primary">route</span>
+            <h3 class="font-title-lg text-title-lg text-on-surface">Response Orchestrator</h3>
+          </div>
+          <div class="flex-1 relative pl-4">
+            <!-- Vertical Line -->
+            <div class="absolute left-7 top-4 bottom-8 w-0.5 bg-surface-variant"></div>
+            <div class="space-y-6 relative">
+              <!-- Step 1 Done -->
+              <div class="flex items-start gap-4">
+                <div class="w-6 h-6 rounded-full bg-secondary/20 border border-secondary text-secondary flex items-center justify-center shrink-0 z-10 mt-0.5">
+                  <span class="material-symbols-outlined text-[14px]">check</span>
+                </div>
+                <div>
+                  <p class="font-body-md text-body-md font-bold text-on-surface">Threat Log Generated</p>
+                  <p class="font-code-sm text-code-sm text-on-surface-variant mt-1 text-xs">Vigilance swarm monitored checks: active logs synced.</p>
                 </div>
               </div>
-              <p class="text-xs text-on-surface-variant text-center">Risk Confidence Score</p>
-            </div>
-            <!-- Details -->
-            <div class="md:col-span-8 flex flex-col justify-center md:pl-2">
-              <div class="flex items-center gap-2 mb-3">
-                <span class="material-symbols-outlined {{ 'text-secondary' if is_safe else 'text-error' }}">{{ 'verified' if is_safe else 'gpp_bad' }}</span>
-                <h3 class="text-base font-bold text-on-surface">
-                  {% if is_safe %}URL Appears Safe{% else %}Potential Phishing Detected{% endif %}
-                </h3>
+              <!-- Step 2 Done -->
+              <div class="flex items-start gap-4">
+                <div class="w-6 h-6 rounded-full bg-secondary/20 border border-secondary text-secondary flex items-center justify-center shrink-0 z-10 mt-0.5">
+                  <span class="material-symbols-outlined text-[14px]">check</span>
+                </div>
+                <div>
+                  <p class="font-body-md text-body-md font-bold text-on-surface">Admin Incident Alert Logged</p>
+                  <p class="font-code-sm text-code-sm text-on-surface-variant mt-1 text-xs">Routed to active dashboard view handlers.</p>
+                </div>
               </div>
-              <div class="bg-surface-container/60 border border-white/5 rounded-xl p-4 relative overflow-hidden mb-4">
-                <div class="absolute left-0 top-0 bottom-0 w-1 {{ 'bg-secondary' if is_safe else 'bg-error' }} rounded-l-xl"></div>
-                <p class="text-sm text-on-surface leading-relaxed pl-2">
-                  <strong>URL:</strong> <code class="{{ 'text-secondary' if is_safe else 'text-error' }} text-xs">{{ url }}</code>
-                </p>
-                <div class="mt-3 pl-2">
-                  <div class="flex items-center justify-between text-xs text-on-surface-variant mb-1.5">
-                    <span>Risk Score</span><span class="font-bold {{ 'text-secondary' if is_safe else 'text-error' }}">{{ confidence }}%</span>
+              <!-- Step 3 In Progress -->
+              <div class="flex items-start gap-4">
+                <div class="w-6 h-6 rounded-full bg-primary/20 border border-primary text-primary flex items-center justify-center shrink-0 z-10 mt-0.5 relative">
+                  <span class="absolute inset-0 rounded-full border border-primary animate-ping opacity-50"></span>
+                  <span class="material-symbols-outlined text-[14px]">hourglass_empty</span>
+                </div>
+                <div class="bg-primary/5 border border-primary/20 rounded p-2 flex-1">
+                  <p class="font-body-md text-body-md font-bold text-primary">Threat Hunter Agent Telemetry</p>
+                  <p class="font-code-sm text-code-sm text-primary/70 mt-1 text-xs">Propagating emergent security rule-sets...</p>
+                  <div class="w-full bg-surface-variant h-1.5 rounded-full mt-2 overflow-hidden">
+                    <div class="bg-primary h-full rounded-full w-2/5 transition-all duration-500"></div>
                   </div>
-                  <div class="w-full bg-surface-variant h-2 rounded-full overflow-hidden">
-                    <div class="h-full rounded-full transition-all duration-700 {{ 'bg-secondary' if is_safe else 'bg-error' }}" style="width: {{ confidence }}%"></div>
-                  </div>
                 </div>
               </div>
-              <!-- Risk analysis details -->
-              {% if risk_analysis and risk_analysis.risks %}
-              <div class="flex flex-wrap gap-2 mb-3">
-                {% for risk in risk_analysis.risks[:3] %}
-                <span class="text-[10px] font-bold bg-error/10 text-error border border-error/20 px-2 py-1 rounded-lg uppercase tracking-wider">{{ risk.type }}</span>
-                {% endfor %}
-              </div>
-              {% endif %}
-              {% if not is_safe %}
-              <div class="flex flex-wrap gap-2">
-                <span class="text-[10px] font-bold bg-error/10 text-error border border-error/20 px-2 py-1 rounded-lg uppercase tracking-wider">Phishing Risk</span>
-                <span class="text-[10px] font-bold bg-error/10 text-error border border-error/20 px-2 py-1 rounded-lg uppercase tracking-wider">Do Not Visit</span>
-              </div>
-              {% else %}
-              <div class="flex flex-wrap gap-2">
-                <span class="text-[10px] font-bold bg-secondary/10 text-secondary border border-secondary/20 px-2 py-1 rounded-lg uppercase tracking-wider">Verified Safe</span>
-              </div>
-              {% endif %}
-            </div>
-          </div>
-          
-          <!-- AI & SOC Risk Correlation Card -->
-          {% if extra_metrics and (extra_metrics.ai_summary or extra_metrics.visual_brand) %}
-          <div class="slide-in mt-6 bg-surface-container/40 border border-primary/20 rounded-xl p-5 glass-panel relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl pointer-events-none"></div>
-            <div class="flex items-center gap-2 mb-4 border-b border-white/8 pb-3">
-              <span class="material-symbols-outlined text-primary text-xl">psychology</span>
-              <h3 class="text-base font-bold text-primary">AI &amp; SOC Risk Correlation</h3>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <!-- LLM Risk Summary -->
-              <div class="space-y-3">
-                <h4 class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">LLM Risk Intelligence</h4>
-                <div class="bg-surface-container/80 border border-white/5 rounded-xl p-4">
-                  <p class="text-sm text-on-surface leading-relaxed">
-                    {{ extra_metrics.ai_summary }}
-                  </p>
-                  <div class="mt-4 flex items-center gap-2">
-                    <span class="text-xs text-on-surface-variant">Recommended Action:</span>
-                    <span class="text-[10px] font-bold px-2.5 py-1 rounded-lg uppercase tracking-wider 
-                      {% if 'Block' in extra_metrics.ai_action or 'Takedown' in extra_metrics.ai_action %}
-                        bg-error/15 text-error border border-error/20
-                      {% elif 'Monitor' in extra_metrics.ai_action or 'sandbox' in extra_metrics.ai_action %}
-                        bg-primary/15 text-primary border border-primary/20
-                      {% else %}
-                        bg-secondary/15 text-secondary border border-secondary/20
-                      {% endif %}">
-                      {{ extra_metrics.ai_action }}
-                    </span>
-                  </div>
+              <!-- Step 4 Pending -->
+              <div class="flex items-start gap-4 opacity-50">
+                <div class="w-6 h-6 rounded-full bg-surface-variant border border-white/10 text-on-surface-variant flex items-center justify-center shrink-0 z-10 mt-0.5">
+                  <span class="material-symbols-outlined text-[14px]">schedule</span>
                 </div>
-              </div>
-
-              <!-- Visual Brand Abuse -->
-              <div class="space-y-3">
-                <h4 class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Visual Impersonation Scan</h4>
-                <div class="bg-surface-container/80 border border-white/5 rounded-xl p-4">
-                  {% if extra_metrics.visual_brand %}
-                    <div class="flex items-center gap-2.5 mb-2">
-                      <span class="material-symbols-outlined text-error">warning</span>
-                      <p class="text-sm font-bold text-on-surface">
-                        Brand Detected: <span class="text-error">{{ extra_metrics.visual_brand }}</span>
-                      </p>
-                    </div>
-                    <div class="mb-3">
-                      <div class="flex items-center justify-between text-xs text-on-surface-variant mb-1">
-                        <span>Visual Similarity Score</span>
-                        <span class="font-bold text-error">{{ extra_metrics.visual_score }}%</span>
-                      </div>
-                      <div class="w-full bg-surface-variant h-1.5 rounded-full overflow-hidden">
-                        <div class="h-full bg-error rounded-full" style="width: {{ extra_metrics.visual_score }}%"></div>
-                      </div>
-                    </div>
-                    <p class="text-xs text-on-surface-variant leading-relaxed">
-                      {{ extra_metrics.visual_reason }}
-                    </p>
-                  {% else %}
-                    <div class="flex items-center gap-2.5 text-secondary mb-2">
-                      <span class="material-symbols-outlined">verified</span>
-                      <p class="text-sm font-bold">No Visual Brand Abuse Detected</p>
-                    </div>
-                    <p class="text-xs text-on-surface-variant leading-relaxed">
-                      No recognizable logo, brand styling, or credential harvesting template matching known entities was detected on the rendered landing page.
-                    </p>
-                  {% endif %}
+                <div>
+                  <p class="font-body-md text-body-md font-bold text-on-surface">Automated Report Generation</p>
+                  <p class="font-code-sm text-code-sm text-on-surface-variant mt-1 text-xs">Awaiting orchestration completion.</p>
                 </div>
               </div>
             </div>
           </div>
-          {% endif %}
-          
-          {% endif %}
         </div>
       </div>
-      <!-- Recent Checks -->
-      <div class="glass-panel rounded-2xl overflow-hidden">
-        <div class="flex items-center justify-between px-5 py-4 border-b border-white/8">
-          <h3 class="text-sm font-bold text-on-surface flex items-center gap-2">
-            <span class="material-symbols-outlined text-on-surface-variant text-base">history</span> Recent Checks
-          </h3>
-          <button onclick="showSection('history')" class="text-xs text-primary hover:text-primary/70 transition-colors flex items-center gap-1">
-            View all <span class="material-symbols-outlined text-sm">arrow_forward</span>
+    </div>
+
+    <!-- ───── DIAGNOSTIC SUITE PAGE VIEW ───── -->
+    <div id="section-diag" class="section-panel">
+      <div class="mb-6">
+        <h2 class="font-headline-lg text-headline-lg text-on-surface">Diagnostic Suite</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant mt-1">Multi-vector payload evaluation engines.</p>
+      </div>
+      <div id="diag-panel-target">
+        <!-- Will dynamically display the Diagnostic Panel here when Diagnostic Suite sidebar is selected -->
+      </div>
+    </div>
+
+    <!-- ───── THREAT HUNTER DETAILS VIEW ───── -->
+    <div id="section-hunter" class="section-panel">
+      <div class="mb-6">
+        <h2 class="font-headline-lg text-headline-lg text-on-surface">Threat Hunter Swarm</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant mt-1">Configure and deploy autonomous scraping and domain-monitoring agents.</p>
+      </div>
+      <div class="glass-panel rounded-xl p-lg space-y-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-4">
+          <div>
+            <h3 class="font-title-lg text-title-lg text-on-surface">Agent Deployment Swarm</h3>
+            <p class="text-xs text-on-surface-variant mt-1">Deploy automated scripts to sweep registers and certificate logs.</p>
+          </div>
+          <button onclick="deployAgent()" class="bg-primary text-on-primary hover:bg-primary-container px-lg py-3 rounded-lg font-label-md text-label-md uppercase tracking-wider transition-colors flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(173,198,255,0.2)]">
+            <span class="material-symbols-outlined">rocket_launch</span> Deploy Swarm Alpha
           </button>
         </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="border-b border-white/5 bg-surface-container/30">
-                <th class="text-left px-5 py-3 text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">URL</th>
-                <th class="text-left px-5 py-3 text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Status</th>
-                <th class="text-left px-5 py-3 text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Risk Score</th>
-                <th class="text-left px-5 py-3 text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Date</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-white/5">
-              {% if history %}
-                {% for check in history[:8] %}
-                <tr class="hover:bg-white/3 transition-colors">
-                  <td class="px-5 py-3.5"><code class="text-xs text-on-surface-variant">{{ check.url[:50] }}{% if check.url|length > 50 %}…{% endif %}</code></td>
-                  <td class="px-5 py-3.5">
-                    {% if check.prediction_label == 'Safe' %}
-                      <span class="text-[10px] font-bold bg-secondary/10 text-secondary border border-secondary/20 px-2 py-0.5 rounded-full">Safe</span>
-                    {% else %}
-                      <span class="text-[10px] font-bold bg-error/10 text-error border border-error/20 px-2 py-0.5 rounded-full">Unsafe</span>
-                    {% endif %}
-                  </td>
-                  <td class="px-5 py-3.5 text-sm text-on-surface-variant">{{ check.prediction_score|round(1) }}%</td>
-                  <td class="px-5 py-3.5 text-sm text-on-surface-variant">{{ check.checked_at }}</td>
-                </tr>
-                {% endfor %}
-              {% else %}
-              <tr><td colspan="4" class="px-5 py-10 text-center text-on-surface-variant text-sm">No URLs checked yet. Try scanning one above!</td></tr>
-              {% endif %}
-            </tbody>
-          </table>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-surface-container rounded-lg p-md border border-white/5">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="material-symbols-outlined text-secondary">verified_user</span>
+              <h4 class="font-semibold text-on-surface">CertLog Sweeper</h4>
+            </div>
+            <p class="text-xs text-on-surface-variant">Continuously checks newly registered SSL certificates for typosquatted brand variations.</p>
+          </div>
+          <div class="bg-surface-container rounded-lg p-md border border-white/5">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="material-symbols-outlined text-secondary">verified_user</span>
+              <h4 class="font-semibold text-on-surface">DarkWeb Parser</h4>
+            </div>
+            <p class="text-xs text-on-surface-variant">Scrapes known text bins and pastebins for leaks involving your pre-configured keywords.</p>
+          </div>
+          <div class="bg-surface-container rounded-lg p-md border border-white/5">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="material-symbols-outlined text-secondary">verified_user</span>
+              <h4 class="font-semibold text-on-surface">DNS Flux Monitor</h4>
+            </div>
+            <p class="text-xs text-on-surface-variant">Monitors suspicious domains for rapid IP address changes indicative of botnet hosting.</p>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- ───── EMAIL PARSER ───── -->
-    <div id="section-email" class="section-panel">
+    <!-- ───── USER ANALYTICS VIEW ───── -->
+    <div id="section-behavior" class="section-panel">
       <div class="mb-6">
-        <h2 class="text-2xl font-bold text-on-surface">Email Intelligence Parser</h2>
-        <p class="text-sm text-on-surface-variant mt-1">Upload raw EML files to extract and analyze embedded URLs and detect urgent language.</p>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface">User Behavior Analytics</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant mt-1">Anomalous actions and telemetry of client sessions.</p>
       </div>
-
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <!-- Upload Form Card -->
-        <div class="lg:col-span-5 glass-panel rounded-2xl p-6 self-start">
-          <h3 class="text-sm font-bold text-on-surface flex items-center gap-2 mb-4">
-            <span class="material-symbols-outlined text-primary">mail</span> Upload EML File
-          </h3>
-          <form id="emailUploadForm" action="/scan_email" method="POST" enctype="multipart/form-data" class="space-y-4">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            <div class="border-2 border-dashed border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-all duration-200" onclick="document.getElementById('emailFile').click()">
-              <span class="material-symbols-outlined text-on-surface-variant text-4xl mb-2">upload_file</span>
-              <p class="text-sm text-on-surface font-semibold text-center">Click to choose or drag EML file here</p>
-              <p class="text-xs text-on-surface-variant/60 text-center mt-1">Maximum file size: 5 MB</p>
-              <input type="file" id="emailFile" name="file" accept=".eml" class="hidden" onchange="updateFileName(this, 'emailFileName')"/>
-              <p id="emailFileName" class="text-xs font-semibold text-primary mt-3 hidden"></p>
-            </div>
-            <button type="submit" class="w-full flex items-center justify-center gap-2 bg-primary text-on-primary py-3 rounded-xl text-sm font-semibold hover:bg-primary/80 transition-all shadow-[0_0_15px_rgba(173,198,255,0.2)] hover:scale-[1.01] duration-150">
-              <span class="material-symbols-outlined text-base">analytics</span> Parse &amp; Analyze Email
-            </button>
-          </form>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-lg">
+        <div class="glass-panel rounded-xl p-md">
+          <h3 class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Device Proximity</h3>
+          <p class="text-2xl font-bold text-on-surface">No Anomaly</p>
+          <p class="text-xs text-on-surface-variant mt-1">Checks for session concurrent logons from diverse geo IPs.</p>
         </div>
-
-        <!-- Scan Results -->
-        <div class="lg:col-span-7 space-y-6">
-          {% if email_result %}
-            {% if email_result.status == 'success' %}
-              <!-- Email Metadata -->
-              <div class="glass-panel rounded-2xl p-6 slide-in">
-                <h3 class="text-sm font-bold text-on-surface flex items-center gap-2 mb-4 border-b border-white/8 pb-3">
-                  <span class="material-symbols-outlined text-secondary">info</span> Email Details
-                </h3>
-                <div class="space-y-3 text-sm text-on-surface">
-                  <div class="grid grid-cols-3 gap-2">
-                    <span class="text-on-surface-variant">Subject:</span>
-                    <span class="col-span-2 font-semibold">{{ email_result.metadata.subject or 'No Subject' }}</span>
-                  </div>
-                  <div class="grid grid-cols-3 gap-2">
-                    <span class="text-on-surface-variant">From:</span>
-                    <span class="col-span-2 font-semibold">{{ email_result.metadata.sender or 'Unknown' }}</span>
-                  </div>
-                  <div class="grid grid-cols-3 gap-2">
-                    <span class="text-on-surface-variant">To:</span>
-                    <span class="col-span-2 font-semibold">{{ email_result.metadata.recipient or 'Unknown' }}</span>
-                  </div>
-                  <div class="grid grid-cols-3 gap-2">
-                    <span class="text-on-surface-variant">Date:</span>
-                    <span class="col-span-2 font-semibold">{{ email_result.metadata.date or 'Unknown' }}</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Language & Urgency Analysis -->
-              <div class="glass-panel rounded-2xl p-6 slide-in">
-                <h3 class="text-sm font-bold text-on-surface flex items-center gap-2 mb-4 border-b border-white/8 pb-3">
-                  <span class="material-symbols-outlined text-primary">psychology</span> Urgency &amp; NLP Analysis
-                </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <div class="flex items-center justify-between text-xs text-on-surface-variant mb-1.5">
-                      <span>Urgency Language Score</span>
-                      <span class="font-bold text-error">{{ email_result.risk_language_score }}%</span>
-                    </div>
-                    <div class="w-full bg-surface-variant h-2 rounded-full overflow-hidden mb-4">
-                      <div class="h-full bg-error rounded-full" style="width: {{ email_result.risk_language_score }}%"></div>
-                    </div>
-                    <p class="text-xs text-on-surface-variant">
-                      Analyzes subject line and body text for high-pressure words (e.g. "immediately", "urgent", "account suspended").
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <div class="flex items-center justify-between text-xs text-on-surface-variant mb-1.5">
-                      <span>AI-Generated Probability</span>
-                      <span class="font-bold text-primary">{{ email_result.ai_generated_probability }}%</span>
-                    </div>
-                    <div class="w-full bg-surface-variant h-2 rounded-full overflow-hidden mb-4">
-                      <div class="h-full bg-primary rounded-full" style="width: {{ email_result.ai_generated_probability }}%"></div>
-                    </div>
-                    <p class="text-xs text-on-surface-variant">
-                      Probability estimation that the email body is AI-generated templates typical in automated phishing campaigns.
-                    </p>
-                  </div>
-                </div>
-
-                {% if email_result.matched_keywords %}
-                <div class="mt-4">
-                  <h4 class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Flagged Urgency Keywords</h4>
-                  <div class="flex flex-wrap gap-2">
-                    {% for keyword in email_result.matched_keywords %}
-                      <span class="text-[10px] font-bold bg-error/10 text-error border border-error/20 px-2.5 py-1 rounded-lg uppercase tracking-wider">{{ keyword }}</span>
-                    {% endfor %}
-                  </div>
-                </div>
-                {% endif %}
-              </div>
-
-              <!-- Extracted URLs -->
-              <div class="glass-panel rounded-2xl p-6 slide-in">
-                <h3 class="text-sm font-bold text-on-surface flex items-center gap-2 mb-4 border-b border-white/8 pb-3">
-                  <span class="material-symbols-outlined text-primary">link</span> Extracted URLs ({{ email_result.urls_extracted|length }})
-                </h3>
-                {% if email_result.urls_extracted %}
-                  <div class="space-y-4">
-                    {% for item in email_result.urls_checked %}
-                      <div class="bg-surface-container/50 border border-white/5 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
-                        <div class="min-w-0">
-                          <code class="text-xs text-on-surface-variant break-all font-semibold block">{{ item.url }}</code>
-                          {% if item.extra_metrics and item.extra_metrics.ai_summary %}
-                            <p class="text-xs text-on-surface-variant/80 mt-1 italic">{{ item.extra_metrics.ai_summary }}</p>
-                          {% endif %}
-                        </div>
-                        <div class="flex items-center gap-2.5 shrink-0 self-end md:self-auto">
-                          <span class="text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider
-                            {% if item.prediction_label == 'Safe' %}
-                              bg-secondary/10 text-secondary border border-secondary/20
-                            {% else %}
-                              bg-error/10 text-error border border-error/20
-                            {% endif %}">
-                            {{ item.prediction_label }}
-                          </span>
-                          <button onclick="recheckUrl('{{ item.url | e }}')" class="text-xs text-primary border border-primary/20 bg-primary/5 hover:bg-primary/15 px-2.5 py-1 rounded-lg transition-all">
-                            Check Details
-                          </button>
-                        </div>
-                      </div>
-                    {% endfor %}
-                  </div>
-                {% else %}
-                  <p class="text-sm text-on-surface-variant text-center py-4">No embedded URLs found in this email file.</p>
-                {% endif %}
-              </div>
-            {% else %}
-              <div class="flex items-start gap-3 bg-error/10 border border-error/25 rounded-xl px-4 py-3 slide-in">
-                <span class="material-symbols-outlined text-error text-base mt-0.5">error</span>
-                <p class="text-sm text-error font-semibold">{{ email_result.message }}</p>
-              </div>
-            {% endif %}
-          {% else %}
-            <div class="glass-panel rounded-2xl p-8 flex flex-col items-center justify-center text-center text-on-surface-variant min-h-[250px]">
-              <span class="material-symbols-outlined text-5xl text-on-surface-variant/30 mb-3">mail</span>
-              <p class="text-sm">No email parsed yet. Upload an EML file to inspect header and body content.</p>
-            </div>
-          {% endif %}
+        <div class="glass-panel rounded-xl p-md">
+          <h3 class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Click Latency Rate</h3>
+          <p class="text-2xl font-bold text-primary">Normal</p>
+          <p class="text-xs text-on-surface-variant mt-1">Calculates interactive delay to classify automated browser bots.</p>
         </div>
-      </div>
-    </div>
-
-    <!-- ───── QR SCANNER ───── -->
-    <div id="section-qr" class="section-panel">
-      <div class="mb-6">
-        <h2 class="text-2xl font-bold text-on-surface">QR Code &amp; Quishing Scanner</h2>
-        <p class="text-sm text-on-surface-variant mt-1">Upload QR code images (PNG, JPG, WEBP) or PDF files containing QR codes to scan them for phishing payloads.</p>
-      </div>
-
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <!-- Upload Form Card -->
-        <div class="lg:col-span-5 glass-panel rounded-2xl p-6 self-start">
-          <h3 class="text-sm font-bold text-on-surface flex items-center gap-2 mb-4">
-            <span class="material-symbols-outlined text-primary">qr_code_scanner</span> Upload Image or PDF
-          </h3>
-          <form id="qrUploadForm" action="/scan_qr" method="POST" enctype="multipart/form-data" class="space-y-4">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            <div class="border-2 border-dashed border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-all duration-200" onclick="document.getElementById('qrFile').click()">
-              <span class="material-symbols-outlined text-on-surface-variant text-4xl mb-2">qr_code</span>
-              <p class="text-sm text-on-surface font-semibold text-center">Click to choose or drag file here</p>
-              <p class="text-xs text-on-surface-variant/60 text-center mt-1">PNG, JPG, WEBP, or PDF (Max 10 MB)</p>
-              <input type="file" id="qrFile" name="file" accept=".png,.jpg,.jpeg,.webp,.pdf" class="hidden" onchange="updateFileName(this, 'qrFileName')"/>
-              <p id="qrFileName" class="text-xs font-semibold text-primary mt-3 hidden"></p>
-            </div>
-            <button type="submit" class="w-full flex items-center justify-center gap-2 bg-primary text-on-primary py-3 rounded-xl text-sm font-semibold hover:bg-primary/80 transition-all shadow-[0_0_15px_rgba(173,198,255,0.2)] hover:scale-[1.01] duration-150">
-              <span class="material-symbols-outlined text-base">troubleshoot</span> Scan for QR Payloads
-            </button>
-          </form>
-        </div>
-
-        <!-- Scan Results -->
-        <div class="lg:col-span-7 space-y-6">
-          {% if qr_result %}
-            {% if qr_result.status == 'success' %}
-              <!-- Extracted URLs -->
-              <div class="glass-panel rounded-2xl p-6 slide-in">
-                <h3 class="text-sm font-bold text-on-surface flex items-center gap-2 mb-4 border-b border-white/8 pb-3">
-                  <span class="material-symbols-outlined text-primary">link</span> Decoded QR Payloads ({{ qr_result.urls_found|length }})
-                </h3>
-                {% if qr_result.urls_found %}
-                  <div class="space-y-4">
-                    {% for item in qr_result.urls_checked %}
-                      <div class="bg-surface-container/50 border border-white/5 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
-                        <div class="min-w-0">
-                          <code class="text-xs text-on-surface-variant break-all font-semibold block">{{ item.url }}</code>
-                          {% if item.extra_metrics and item.extra_metrics.ai_summary %}
-                            <p class="text-xs text-on-surface-variant/80 mt-1 italic">{{ item.extra_metrics.ai_summary }}</p>
-                          {% endif %}
-                        </div>
-                        <div class="flex items-center gap-2.5 shrink-0 self-end md:self-auto">
-                          <span class="text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider
-                            {% if item.prediction_label == 'Safe' %}
-                              bg-secondary/10 text-secondary border border-secondary/20
-                            {% else %}
-                              bg-error/10 text-error border border-error/20
-                            {% endif %}">
-                            {{ item.prediction_label }}
-                          </span>
-                          <button onclick="recheckUrl('{{ item.url | e }}')" class="text-xs text-primary border border-primary/20 bg-primary/5 hover:bg-primary/15 px-2.5 py-1 rounded-lg transition-all">
-                            Check Details
-                          </button>
-                        </div>
-                      </div>
-                    {% endfor %}
-                  </div>
-                {% else %}
-                  <p class="text-sm text-on-surface-variant text-center py-4">No valid URLs found in any detected QR codes.</p>
-                {% endif %}
-              </div>
-            {% else %}
-              <div class="flex items-start gap-3 bg-error/10 border border-error/25 rounded-xl px-4 py-3 slide-in">
-                <span class="material-symbols-outlined text-error text-base mt-0.5">error</span>
-                <p class="text-sm text-error font-semibold">{{ qr_result.message }}</p>
-              </div>
-            {% endif %}
-          {% else %}
-            <div class="glass-panel rounded-2xl p-8 flex flex-col items-center justify-center text-center text-on-surface-variant min-h-[250px]">
-              <span class="material-symbols-outlined text-5xl text-on-surface-variant/30 mb-3">qr_code</span>
-              <p class="text-sm">No QR scans run yet. Upload an image or PDF to extract URL payloads.</p>
-            </div>
-          {% endif %}
+        <div class="glass-panel rounded-xl p-md">
+          <h3 class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Safety Score</h3>
+          <p class="text-2xl font-bold text-secondary">{{ safety_rate }}%</p>
+          <p class="text-xs text-on-surface-variant mt-1">Based on URLs scanned that return safe verdicts.</p>
         </div>
       </div>
     </div>
@@ -621,10 +507,10 @@
     <div id="section-history" class="section-panel">
       <div class="flex items-center justify-between mb-6">
         <div>
-          <h2 class="text-2xl font-bold text-on-surface">History &amp; Logs</h2>
-          <p class="text-sm text-on-surface-variant mt-1">All your URL scans in one place.</p>
+          <h2 class="font-headline-lg text-headline-lg text-on-surface">History &amp; Logs</h2>
+          <p class="font-body-md text-body-md text-on-surface-variant mt-1">All your URL scans in one place.</p>
         </div>
-        <button onclick="exportHistory()" class="flex items-center gap-2 border border-white/10 text-on-surface px-4 py-2.5 rounded-xl text-sm hover:bg-white/5 transition-all duration-150">
+        <button onclick="exportHistory()" class="flex items-center gap-2 border border-white/10 text-on-surface px-4 py-2.5 rounded-xl text-sm hover:bg-white/5 active:scale-95 transition-all duration-150">
           <span class="material-symbols-outlined text-base">download</span> Export CSV
         </button>
       </div>
@@ -679,8 +565,8 @@
     <!-- ───── SETTINGS ───── -->
     <div id="section-settings" class="section-panel">
       <div class="mb-6">
-        <h2 class="text-2xl font-bold text-on-surface">Account Settings</h2>
-        <p class="text-sm text-on-surface-variant mt-1">Update your profile and preferences.</p>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface">Configuration</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant mt-1">Configure profile settings and active rules.</p>
       </div>
       <div class="glass-panel rounded-2xl p-6 max-w-xl">
         <div class="flex items-center gap-4 mb-5 pb-5 border-b border-white/8">
@@ -689,7 +575,7 @@
           </div>
           <div>
             <p class="text-base font-bold text-on-surface">{{ session.get('user', 'User') }}</p>
-            <p class="text-xs text-on-surface-variant mt-0.5">Member since January 2026</p>
+            <p class="text-xs text-on-surface-variant mt-0.5">Vigilance Superuser Account</p>
           </div>
         </div>
         <form class="space-y-4" id="userSettingsForm" onsubmit="saveUserSettings(event)">
@@ -698,7 +584,7 @@
             <input type="text" value="{{ session.get('user', '') }}" disabled class="w-full bg-surface-container/50 border border-white/5 rounded-xl py-2.5 px-4 text-sm text-on-surface-variant"/>
           </div>
           <div>
-            <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Email</label>
+            <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Email Address</label>
             <input type="email" id="userEmail" placeholder="your.email@example.com" class="w-full bg-surface-container border border-white/10 rounded-xl py-2.5 px-4 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary/50 transition-all"/>
           </div>
           <div>
@@ -716,8 +602,8 @@
           <div class="pt-2 space-y-3">
             <div class="flex items-center justify-between p-4 bg-surface-container rounded-xl border border-white/8">
               <div>
-                <p class="text-sm font-semibold text-on-surface">Email Notifications</p>
-                <p class="text-xs text-on-surface-variant mt-0.5">Alerts for suspicious URLs</p>
+                <p class="text-sm font-semibold text-on-surface">Email Security Alerts</p>
+                <p class="text-xs text-on-surface-variant mt-0.5">Receive threat notification dispatches</p>
               </div>
               <label class="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" id="emailNotifications" checked class="sr-only peer">
@@ -726,8 +612,8 @@
             </div>
             <div class="flex items-center justify-between p-4 bg-surface-container rounded-xl border border-white/8">
               <div>
-                <p class="text-sm font-semibold text-on-surface">Keep Check History</p>
-                <p class="text-xs text-on-surface-variant mt-0.5">Save all URL scan results</p>
+                <p class="text-sm font-semibold text-on-surface">Telemetry Logs Retention</p>
+                <p class="text-xs text-on-surface-variant mt-0.5">Persist checked payload logs</p>
               </div>
               <label class="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" id="keepHistory" checked class="sr-only peer">
@@ -736,7 +622,7 @@
             </div>
           </div>
           <button type="submit" class="flex items-center gap-2 bg-secondary text-on-secondary px-6 py-3 rounded-xl text-sm font-semibold hover:bg-secondary/80 transition-all shadow-[0_0_15px_rgba(78,222,163,0.15)] hover:scale-[1.02] duration-150">
-            <span class="material-symbols-outlined text-base">save</span> Save Changes
+            <span class="material-symbols-outlined text-base">save</span> Save Configuration
           </button>
         </form>
       </div>
@@ -746,22 +632,107 @@
 
   <div id="toastContainer" class="fixed bottom-6 right-6 z-[200] space-y-3 pointer-events-none"></div>
 
+  <!-- Floating Chat Widget -->
+  <div class="fixed bottom-6 right-6 z-[100] flex flex-col items-end">
+    <!-- Chat Window -->
+    <div id="chatWindow" class="hidden w-80 sm:w-[350px] h-[400px] glass-panel rounded-2xl mb-4 flex flex-col shadow-2xl overflow-hidden translate-y-4 opacity-0 transition-all duration-300">
+      <!-- Chat Header -->
+      <div class="bg-surface-container-high px-4 py-3 flex items-center justify-between border-b border-white/8 shrink-0">
+        <div class="flex items-center gap-2">
+          <div class="w-2 h-2 rounded-full bg-secondary animate-pulse"></div>
+          <div>
+            <h4 class="text-xs font-bold text-on-surface">PhishGuard AI Assistant</h4>
+            <p class="text-[9px] text-on-surface-variant/70">Powered by Gemini</p>
+          </div>
+        </div>
+        <button onclick="toggleChat()" class="text-on-surface-variant hover:text-on-surface transition-colors">
+          <span class="material-symbols-outlined text-lg">close</span>
+        </button>
+      </div>
+      
+      <!-- Chat Messages -->
+      <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-3 scrollbar-thin text-xs">
+        <!-- Welcome Message -->
+        <div class="flex gap-2">
+          <div class="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+            <span class="material-symbols-outlined text-primary text-[14px]">psychology</span>
+          </div>
+          <div class="bg-surface-container rounded-r-xl rounded-bl-xl p-2.5 max-w-[80%] leading-relaxed text-on-surface">
+            Hi! I'm your PhishGuard security assistant. Ask me anything about suspicious URLs, email safety, or how to protect against phishing.
+          </div>
+        </div>
+        
+        <!-- Suggested Questions -->
+        <div class="flex flex-col gap-1.5 pt-2">
+          <p class="text-[9px] uppercase tracking-wider text-on-surface-variant/60 font-semibold mb-1">Suggested Topics:</p>
+          <div class="flex flex-wrap gap-1.5">
+            <button onclick="askSuggested('What is phishing?')" class="bg-white/5 hover:bg-white/10 border border-white/8 px-2.5 py-1 rounded-lg text-left text-primary transition-all">What is phishing?</button>
+            <button onclick="askSuggested('How do I scan a QR code?')" class="bg-white/5 hover:bg-white/10 border border-white/8 px-2.5 py-1 rounded-lg text-left text-primary transition-all">How do I scan a QR code?</button>
+            <button onclick="askSuggested('Check if a URL is safe')" class="bg-white/5 hover:bg-white/10 border border-white/8 px-2.5 py-1 rounded-lg text-left text-primary transition-all">Check if a URL is safe</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Chat Input -->
+      <div class="p-3 border-t border-white/8 bg-surface-container/50 flex gap-2 items-center shrink-0">
+        <input type="text" id="chatInput" placeholder="Ask a security question..." onkeydown="if(event.key==='Enter') sendChatMessage()"
+          class="flex-1 bg-surface-container border border-white/10 rounded-xl py-2 px-3 text-xs text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all"/>
+        <button onclick="sendChatMessage()" class="w-8 h-8 rounded-xl bg-primary text-on-primary flex items-center justify-center hover:bg-primary/80 transition-all shrink-0">
+          <span class="material-symbols-outlined text-sm">send</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Chat Trigger Button -->
+    <button onclick="toggleChat()" class="w-12 h-12 rounded-full bg-primary text-on-primary flex items-center justify-center hover:bg-primary/80 transition-all shadow-[0_4px_20px_rgba(173,198,255,0.4)] hover:scale-105 duration-150">
+      <span class="material-symbols-outlined text-xl">chat</span>
+    </button>
+  </div>
+
   <script>
     // ── Section Nav ──
     function showSection(name){
       document.querySelectorAll('.section-panel').forEach(el=>el.classList.remove('active'));
       document.querySelectorAll('.nav-btn').forEach(el=>{
-        el.classList.remove('text-primary','font-semibold','bg-primary/8','border-r-2','border-primary');
-        el.classList.add('text-on-surface-variant');
+        el.classList.remove('text-primary','font-bold','bg-primary/5','border-r-2','border-primary');
+        el.classList.add('text-on-surface-variant','hover:text-on-surface','hover:bg-white/5');
       });
-      document.getElementById('section-'+name).classList.add('active');
+      
+      const targetPanel = document.getElementById('section-'+name);
+      if(targetPanel) {
+        targetPanel.classList.add('active');
+      }
+      
       const btn=document.getElementById('nav-'+name);
-      if(btn){ btn.classList.remove('text-on-surface-variant'); btn.classList.add('text-primary','font-semibold','bg-primary/8','border-r-2','border-primary'); }
+      if(btn){ 
+        btn.classList.remove('text-on-surface-variant','hover:text-on-surface','hover:bg-white/5'); 
+        btn.classList.add('text-primary','font-bold','bg-primary/5','border-r-2','border-primary'); 
+      }
+      
+      // If Diagnostic Suite is selected in Sidebar, move the Diagnostic Panel into the Diagnostic section!
+      const panel = document.getElementById('diagnostic-suite-panel');
+      if (name === 'diag') {
+        const diagTarget = document.getElementById('diag-panel-target');
+        if (diagTarget && panel) {
+          diagTarget.appendChild(panel);
+        }
+      } else {
+        // Put it back in the dashboard view
+        const dashTarget = document.getElementById('diagnostic-panel-container');
+        if (dashTarget && panel) {
+          dashTarget.appendChild(panel);
+        }
+      }
+      
       window.scrollTo(0,0);
     }
 
     function handleTopSearch(val){
-      if(val.length>0){ showSection('history'); document.getElementById('historySearch').value=val; filterHistory(); }
+      if(val.length>0){ 
+        showSection('history'); 
+        document.getElementById('historySearch').value=val; 
+        filterHistory(); 
+      }
     }
 
     function showToast(message,type='success'){
@@ -775,6 +746,7 @@
       setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateY(16px)'; setTimeout(()=>t.remove(),300); },4000);
     }
 
+    // ── Simple live search ──
     function filterHistory(){
       const q=document.getElementById('historySearch').value.toLowerCase();
       document.querySelectorAll('#historyTable tr').forEach(r=>{ r.style.display=r.textContent.toLowerCase().includes(q)?'':'none'; });
@@ -809,9 +781,36 @@
       showToast('Settings saved successfully');
     }
 
+    // Suggested questions click handler
     function askSuggested(q){
       document.getElementById('chatInput').value=q;
       sendChatMessage();
+    }
+
+    function deployAgent() {
+      showToast('Deploying autonomous threat hunter Swarm Alpha...', 'success');
+      setTimeout(() => {
+        showToast('Swarm deployed successfully! Monitoring cert logs and DNS fluxes.', 'success');
+      }, 1500);
+    }
+
+    // ── Diagnostic Sub-Tabs ──
+    function showDiagTab(name) {
+      document.querySelectorAll('.diag-tab-panel').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.diag-tab-btn').forEach(btn => {
+        btn.classList.remove('text-primary', 'border-b-2', 'border-primary', 'bg-primary/5');
+        btn.classList.add('text-on-surface-variant', 'hover:text-on-surface', 'hover:bg-white/5');
+      });
+      
+      const panel = document.getElementById('diag-' + name);
+      if (panel) {
+        panel.classList.remove('hidden');
+      }
+      const activeBtn = document.getElementById('diag-btn-' + name);
+      if (activeBtn) {
+        activeBtn.classList.remove('text-on-surface-variant', 'hover:text-on-surface', 'hover:bg-white/5');
+        activeBtn.classList.add('text-primary', 'border-b-2', 'border-primary', 'bg-primary/5');
+      }
     }
 
     function updateFileName(input, targetId) {
@@ -824,6 +823,7 @@
       }
     }
 
+    // ── Chatbot Functions ──
     function toggleChat() {
       const win = document.getElementById('chatWindow');
       if (win.classList.contains('hidden')) {
@@ -913,7 +913,12 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       const activeTab = '{{ active_tab or "dashboard" }}';
-      showSection(activeTab);
+      if (activeTab === 'email' || activeTab === 'qr') {
+        showSection('dashboard');
+        showDiagTab(activeTab);
+      } else {
+        showSection(activeTab);
+      }
     });
   </script>
 
@@ -932,63 +937,5 @@
     const app = initializeApp(firebaseConfig);
     const analytics = getAnalytics(app);
   </script>
-
-  <!-- Floating Chat Widget -->
-  <div class="fixed bottom-6 right-6 z-[100] flex flex-col items-end">
-    <!-- Chat Window -->
-    <div id="chatWindow" class="hidden w-80 sm:w-[350px] h-[400px] glass-panel rounded-2xl mb-4 flex flex-col shadow-2xl overflow-hidden translate-y-4 opacity-0 transition-all duration-300">
-      <!-- Chat Header -->
-      <div class="bg-surface-container-high px-4 py-3 flex items-center justify-between border-b border-white/8 shrink-0">
-        <div class="flex items-center gap-2">
-          <div class="w-2 h-2 rounded-full bg-secondary animate-pulse"></div>
-          <div>
-            <h4 class="text-xs font-bold text-on-surface">PhishGuard AI Assistant</h4>
-            <p class="text-[9px] text-on-surface-variant/70">Powered by Gemini</p>
-          </div>
-        </div>
-        <button onclick="toggleChat()" class="text-on-surface-variant hover:text-on-surface transition-colors">
-          <span class="material-symbols-outlined text-lg">close</span>
-        </button>
-      </div>
-      
-      <!-- Chat Messages -->
-      <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-3 scrollbar-thin text-xs">
-        <!-- Welcome Message -->
-        <div class="flex gap-2">
-          <div class="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-            <span class="material-symbols-outlined text-primary text-[14px]">psychology</span>
-          </div>
-          <div class="bg-surface-container rounded-r-xl rounded-bl-xl p-2.5 max-w-[80%] leading-relaxed text-on-surface">
-            Hi! I'm your PhishGuard security assistant. Ask me anything about suspicious URLs, email safety, or how to protect against phishing.
-          </div>
-        </div>
-        
-        <!-- Suggested Questions -->
-        <div class="flex flex-col gap-1.5 pt-2">
-          <p class="text-[9px] uppercase tracking-wider text-on-surface-variant/60 font-semibold mb-1">Suggested Topics:</p>
-          <div class="flex flex-wrap gap-1.5">
-            <button onclick="askSuggested('What is phishing?')" class="bg-white/5 hover:bg-white/10 border border-white/8 px-2.5 py-1 rounded-lg text-left text-primary transition-all">What is phishing?</button>
-            <button onclick="askSuggested('How do I scan a QR code?')" class="bg-white/5 hover:bg-white/10 border border-white/8 px-2.5 py-1 rounded-lg text-left text-primary transition-all">How do I scan a QR code?</button>
-            <button onclick="askSuggested('Check if a URL is safe')" class="bg-white/5 hover:bg-white/10 border border-white/8 px-2.5 py-1 rounded-lg text-left text-primary transition-all">Check if a URL is safe</button>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Chat Input -->
-      <div class="p-3 border-t border-white/8 bg-surface-container/50 flex gap-2 items-center shrink-0">
-        <input type="text" id="chatInput" placeholder="Ask a security question..." onkeydown="if(event.key==='Enter') sendChatMessage()"
-          class="flex-1 bg-surface-container border border-white/10 rounded-xl py-2 px-3 text-xs text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all"/>
-        <button onclick="sendChatMessage()" class="w-8 h-8 rounded-xl bg-primary text-on-primary flex items-center justify-center hover:bg-primary/80 transition-all shrink-0">
-          <span class="material-symbols-outlined text-sm">send</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Chat Trigger Button -->
-    <button onclick="toggleChat()" class="w-12 h-12 rounded-full bg-primary text-on-primary flex items-center justify-center hover:bg-primary/80 transition-all shadow-[0_4px_20px_rgba(173,198,255,0.4)] hover:scale-105 duration-150">
-      <span class="material-symbols-outlined text-xl">chat</span>
-    </button>
-  </div>
 </body>
-
 </html>
