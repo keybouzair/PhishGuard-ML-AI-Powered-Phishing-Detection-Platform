@@ -221,9 +221,10 @@ def get_all_users():
         return cursor.fetchall()
 
 
-def add_user(username, password, email='', role='user'):
+def add_user(username, password, email='', role='user', skip_validation=False):
     """Add a new user (C-28: enforce password complexity)"""
-    validate_password_strength(password)
+    if not skip_validation:
+        validate_password_strength(password)
     with get_db() as conn:
         cursor = conn.cursor()
         try:

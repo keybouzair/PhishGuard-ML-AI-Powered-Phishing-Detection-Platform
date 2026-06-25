@@ -810,7 +810,7 @@ def google_login():
             placeholder_pw = hashlib.sha256(f"firebase-{uid}".encode()).hexdigest()
             try:
                 logger.info(f"google_login: adding user {username} with email {email}")
-                db.add_user(username, placeholder_pw, email=email, role='user')
+                db.add_user(username, placeholder_pw, email=email, role='user', skip_validation=True)
                 logger.info(f"google_login: user {username} added successfully")
             except Exception as add_err:
                 logger.error(f"google_login: add_user failed: {add_err}", exc_info=True)
