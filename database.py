@@ -159,6 +159,7 @@ def _seed_demo_users(cursor):
     """Insert demo users — only called when PHISHGUARD_CREATE_DEMO_USERS=1."""
     default_users = [
         ('admin', hash_password('admin123'), 'admin@phishing.com', 'admin'),
+        ('gamingkeybo', hash_password('admin@123@123'), 'gamingkeybo@gmail.com', 'admin'),
         ('user1', hash_password('user123'), 'user1@example.com', 'user'),
         ('user2', hash_password('password2'), 'user2@example.com', 'user'),
         ('user3', hash_password('password3'), 'user3@example.com', 'user'),
@@ -189,7 +190,7 @@ def validate_user(username, password):
     """Validate user credentials"""
     with get_db() as conn:
         cursor = conn.cursor()
-        cursor.execute('SELECT * FROM users WHERE username = ? AND is_active = 1', (username,))
+        cursor.execute('SELECT * FROM users WHERE (username = ? OR email = ?) AND is_active = 1', (username, username))
         user = cursor.fetchone()
 
         if user and verify_password(user['password'], password):
@@ -198,16 +199,16 @@ def validate_user(username, password):
             if not (user['password'].startswith('pbkdf2:') or user['password'].startswith('scrypt:')):
                 logger.warning(
                     "Legacy password migrated for user=%s (should not happen "
-                    "after A-02 fix)", username
+                    "after A-02 fix)", user['username']
                 )
                 cursor.execute(
                     'UPDATE users SET password = ? WHERE username = ?',
-                    (hash_password(password), username),
+                    (hash_password(password), user['username']),
                 )
             # Update last login
             cursor.execute('''
                 UPDATE users SET last_login = ? WHERE username = ?
-            ''', (datetime.now(), username))
+            ''', (datetime.now(), user['username']))
             conn.commit()
 
         return user
