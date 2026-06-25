@@ -82,6 +82,48 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("phishing_app")
 
 
+def _parse_csv_env(name: str, default: str = "") -> set[str]:
+    raw_value = os.environ.get(name, default)
+    return {item.strip() for item in raw_value.split(',') if item.strip()}
+
+
+_ALLOWED_ORIGINS = _parse_csv_env(
+    'ALLOWED_ORIGINS',
+    'http://localhost:3000,http://localhost:5173,http://localhost:8080'
+)
+
+_ALLOWED_ORIGIN_PATTERNS = [
+    re.compile(pattern.strip())
+    for pattern in os.environ.get(
+        'ALLOWED_ORIGIN_REGEXES',
+        r'^https://.*\.vercel\.app$'
+    ).split(',')
+    if pattern.strip()
+]
+
+
+def _is_allowed_origin(origin: str | None) -> bool:
+    if not origin:
+        return False
+    if origin in _ALLOWED_ORIGINS:
+        return True
+    return any(pattern.match(origin) for pattern in _ALLOWED_ORIGIN_PATTERNS)
+
+
+def _apply_cors_headers(response):
+    origin = request.headers.get('Origin')
+    if _is_allowed_origin(origin):
+        response.headers['Access-Control-Allow-Origin'] = origin
+        response.headers['Access-Control-Allow-Credentials'] = 'true'
+        response.headers['Access-Control-Allow-Headers'] = (
+            'Content-Type, Authorization, X-Requested-With, X-CSRFToken, X-CSRF-Token'
+        )
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, PATCH, DELETE, OPTIONS'
+        response.headers['Access-Control-Max-Age'] = '86400'
+        response.headers['Vary'] = 'Origin'
+    return response
+
+
 # ---------- Log sanitisation helper (B-09, C-27) ----------
 _CONTROL_CHARS_RE = re.compile(r'[\x00-\x1f\x7f-\x9f]')
 
@@ -581,7 +623,7 @@ def add_request_observability_headers(response):
             'latency_ms': elapsed_ms,
         },
     )
-    return response
+    return _apply_cors_headers(response)
 
 # Ensure directories exist
 if os.environ.get("VERCEL") == "1":
