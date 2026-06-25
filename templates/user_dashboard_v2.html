@@ -824,6 +824,93 @@
       }
     }
 
+    function toggleChat() {
+      const win = document.getElementById('chatWindow');
+      if (win.classList.contains('hidden')) {
+        win.classList.remove('hidden');
+        requestAnimationFrame(() => {
+          win.classList.remove('translate-y-4', 'opacity-0');
+        });
+      } else {
+        win.classList.add('translate-y-4', 'opacity-0');
+        setTimeout(() => {
+          win.classList.add('hidden');
+        }, 300);
+      }
+    }
+
+    function appendMessage(text, isUser = false) {
+      const container = document.getElementById('chatMessages');
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'flex gap-2 ' + (isUser ? 'justify-end' : '');
+      
+      const avatarHtml = isUser ? '' : `
+        <div class="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-primary text-[14px]">psychology</span>
+        </div>
+      `;
+      
+      const bubbleClass = isUser 
+        ? 'bg-primary text-on-primary rounded-l-xl rounded-br-xl' 
+        : 'bg-surface-container rounded-r-xl rounded-bl-xl text-on-surface';
+        
+      msgDiv.innerHTML = `
+        ${avatarHtml}
+        <div class="${bubbleClass} p-2.5 max-w-[80%] leading-relaxed break-words">
+          ${text}
+        </div>
+      `;
+      
+      container.appendChild(msgDiv);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function sendChatMessage() {
+      const input = document.getElementById('chatInput');
+      const message = input.value.trim();
+      if (!message) return;
+      
+      appendMessage(message, true);
+      input.value = '';
+      
+      const loaderDiv = document.createElement('div');
+      loaderDiv.className = 'flex gap-2 typing-indicator';
+      loaderDiv.innerHTML = `
+        <div class="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-primary text-[14px]">psychology</span>
+        </div>
+        <div class="bg-surface-container rounded-r-xl rounded-bl-xl p-2.5 max-w-[80%] text-on-surface-variant flex gap-1 items-center">
+          <span class="w-1 h-1 bg-on-surface-variant rounded-full animate-bounce"></span>
+          <span class="w-1 h-1 bg-on-surface-variant rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
+          <span class="w-1 h-1 bg-on-surface-variant rounded-full animate-bounce" style="animation-delay: 0.4s"></span>
+        </div>
+      `;
+      const container = document.getElementById('chatMessages');
+      container.appendChild(loaderDiv);
+      container.scrollTop = container.scrollHeight;
+      
+      fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ message: message })
+      })
+      .then(res => res.json())
+      .then(data => {
+        loaderDiv.remove();
+        if (data.reply) {
+          appendMessage(data.reply, false);
+        } else {
+          appendMessage('Sorry, I received an invalid response.', false);
+        }
+      })
+      .catch(err => {
+        loaderDiv.remove();
+        appendMessage('Error communicating with the security assistant.', false);
+      });
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       const activeTab = '{{ active_tab or "dashboard" }}';
       showSection(activeTab);
@@ -845,6 +932,63 @@
     const app = initializeApp(firebaseConfig);
     const analytics = getAnalytics(app);
   </script>
+
+  <!-- Floating Chat Widget -->
+  <div class="fixed bottom-6 right-6 z-[100] flex flex-col items-end">
+    <!-- Chat Window -->
+    <div id="chatWindow" class="hidden w-80 sm:w-[350px] h-[400px] glass-panel rounded-2xl mb-4 flex flex-col shadow-2xl overflow-hidden translate-y-4 opacity-0 transition-all duration-300">
+      <!-- Chat Header -->
+      <div class="bg-surface-container-high px-4 py-3 flex items-center justify-between border-b border-white/8 shrink-0">
+        <div class="flex items-center gap-2">
+          <div class="w-2 h-2 rounded-full bg-secondary animate-pulse"></div>
+          <div>
+            <h4 class="text-xs font-bold text-on-surface">PhishGuard AI Assistant</h4>
+            <p class="text-[9px] text-on-surface-variant/70">Powered by Gemini</p>
+          </div>
+        </div>
+        <button onclick="toggleChat()" class="text-on-surface-variant hover:text-on-surface transition-colors">
+          <span class="material-symbols-outlined text-lg">close</span>
+        </button>
+      </div>
+      
+      <!-- Chat Messages -->
+      <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-3 scrollbar-thin text-xs">
+        <!-- Welcome Message -->
+        <div class="flex gap-2">
+          <div class="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+            <span class="material-symbols-outlined text-primary text-[14px]">psychology</span>
+          </div>
+          <div class="bg-surface-container rounded-r-xl rounded-bl-xl p-2.5 max-w-[80%] leading-relaxed text-on-surface">
+            Hi! I'm your PhishGuard security assistant. Ask me anything about suspicious URLs, email safety, or how to protect against phishing.
+          </div>
+        </div>
+        
+        <!-- Suggested Questions -->
+        <div class="flex flex-col gap-1.5 pt-2">
+          <p class="text-[9px] uppercase tracking-wider text-on-surface-variant/60 font-semibold mb-1">Suggested Topics:</p>
+          <div class="flex flex-wrap gap-1.5">
+            <button onclick="askSuggested('What is phishing?')" class="bg-white/5 hover:bg-white/10 border border-white/8 px-2.5 py-1 rounded-lg text-left text-primary transition-all">What is phishing?</button>
+            <button onclick="askSuggested('How do I scan a QR code?')" class="bg-white/5 hover:bg-white/10 border border-white/8 px-2.5 py-1 rounded-lg text-left text-primary transition-all">How do I scan a QR code?</button>
+            <button onclick="askSuggested('Check if a URL is safe')" class="bg-white/5 hover:bg-white/10 border border-white/8 px-2.5 py-1 rounded-lg text-left text-primary transition-all">Check if a URL is safe</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Chat Input -->
+      <div class="p-3 border-t border-white/8 bg-surface-container/50 flex gap-2 items-center shrink-0">
+        <input type="text" id="chatInput" placeholder="Ask a security question..." onkeydown="if(event.key==='Enter') sendChatMessage()"
+          class="flex-1 bg-surface-container border border-white/10 rounded-xl py-2 px-3 text-xs text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all"/>
+        <button onclick="sendChatMessage()" class="w-8 h-8 rounded-xl bg-primary text-on-primary flex items-center justify-center hover:bg-primary/80 transition-all shrink-0">
+          <span class="material-symbols-outlined text-sm">send</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Chat Trigger Button -->
+    <button onclick="toggleChat()" class="w-12 h-12 rounded-full bg-primary text-on-primary flex items-center justify-center hover:bg-primary/80 transition-all shadow-[0_4px_20px_rgba(173,198,255,0.4)] hover:scale-105 duration-150">
+      <span class="material-symbols-outlined text-xl">chat</span>
+    </button>
+  </div>
 </body>
 
 </html>

@@ -1199,6 +1199,80 @@ def scan_qr():
                          history=history)
 
 
+@app.route("/api/chat", methods=["POST", "OPTIONS"])
+@csrf.exempt
+@rate_limit(max_requests=20, window_seconds=60)
+def api_chat():
+    if request.method == "OPTIONS":
+        response = jsonify({'ok': True})
+        return _apply_cors_headers(response), 200
+        
+    if 'user' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+        
+    data = request.get_json(silent=True) or {}
+    message = data.get('message', '').strip()
+    
+    if not message:
+        return jsonify({'error': 'Message is required'}), 400
+        
+    if len(message) > 1000:
+        return jsonify({'error': 'Message is too long'}), 400
+        
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+    reply = "I'm sorry, I'm having trouble connecting to my brain right now. Please try again later."
+    
+    if gemini_key:
+        import requests
+        try:
+            api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+            
+            prompt = (
+                f"You are PhishGuard AI, a friendly and professional cybersecurity assistant. "
+                f"Your goal is to help the user understand phishing, quishing, email safety, and how to verify if URLs or files are malicious. "
+                f"Be concise, informative, and security-minded. Do not answer questions completely unrelated to security or IT. "
+                f"User message: {message}\n"
+                f"Assistant reply:"
+            )
+            
+            payload = {
+                "contents": [
+                    {
+                        "parts": [
+                            {"text": prompt}
+                        ]
+                    }
+                ]
+            }
+            
+            headers = {"Content-Type": "application/json"}
+            response = requests.post(api_url, json=payload, headers=headers, timeout=10)
+            
+            if response.status_code == 200:
+                resp_data = response.json()
+                try:
+                    reply = resp_data["contents"][0]["parts"][0]["text"].strip()
+                except Exception as parse_err:
+                    logger.error(f"Failed to parse chatbot Gemini response: {parse_err}")
+            else:
+                logger.error(f"Chatbot Gemini API returned status {response.status_code}: {response.text}")
+        except Exception as e:
+            logger.error(f"Error calling Gemini in chatbot: {e}")
+    else:
+        # Heuristic/Mock friendly response if no API key is set
+        msg_lower = message.lower()
+        if "phishing" in msg_lower:
+            reply = "Phishing is a type of social engineering attack where attackers trick users into giving away sensitive information (like credentials or credit card numbers) by masquerading as a trustworthy entity."
+        elif "url" in msg_lower or "link" in msg_lower:
+            reply = "You can scan any URL using the 'URL Classifier' tab on your dashboard. Avoid clicking on links that have suspicious domains, lack HTTPS, or come from unknown senders."
+        elif "quishing" in msg_lower or "qr" in msg_lower:
+            reply = "Quishing is phishing via QR codes. Attackers embed malicious URLs inside QR codes, which users scan with their phones, bypassing traditional email link filters. Use our 'QR Scanner' tab to verify them safely."
+        else:
+            reply = "I am the PhishGuard AI Assistant. I can help you analyze phishing indicators, explain quishing, or guide you on how to check URLs and email safety. Try asking about 'phishing' or 'QR codes'!"
+            
+    response = jsonify({'reply': reply})
+    return _apply_cors_headers(response), 200
+
 
 # ============== API ROUTES ==============
 
