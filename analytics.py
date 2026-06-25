@@ -11,10 +11,12 @@ import io
 import csv
 import os
 
-if os.environ.get("VERCEL") == "1":
-    DATABASE_PATH = '/tmp/phishing_detection.db'
-else:
-    DATABASE_PATH = 'phishing_detection.db'
+DATABASE_PATH = os.environ.get("DATABASE_PATH")
+if not DATABASE_PATH:
+    if os.environ.get("VERCEL") == "1":
+        DATABASE_PATH = '/tmp/phishing_detection.db'
+    else:
+        DATABASE_PATH = 'phishing_detection.db'
 
 
 class AnalyticsEngine:

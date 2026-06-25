@@ -13,10 +13,12 @@ from urllib.parse import urlparse
 from werkzeug.security import generate_password_hash, check_password_hash
 
 # Vercel Serverless Functions have a read-only filesystem except for /tmp
-if os.environ.get("VERCEL") == "1":
-    DATABASE_PATH = '/tmp/phishing_detection.db'
-else:
-    DATABASE_PATH = 'phishing_detection.db'
+DATABASE_PATH = os.environ.get("DATABASE_PATH")
+if not DATABASE_PATH:
+    if os.environ.get("VERCEL") == "1":
+        DATABASE_PATH = '/tmp/phishing_detection.db'
+    else:
+        DATABASE_PATH = 'phishing_detection.db'
 
 logger = logging.getLogger("phishing_app.db")
 

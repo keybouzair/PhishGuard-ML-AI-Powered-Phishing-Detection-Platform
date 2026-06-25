@@ -24,10 +24,12 @@ SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD', 'your_app_password')
 FROM_EMAIL = os.environ.get('FROM_EMAIL', 'noreply@phishingdetector.com')
 FROM_NAME = 'Phishing Detection System'
 
-if os.environ.get("VERCEL") == "1":
-    DATABASE_PATH = '/tmp/phishing_detection.db'
-else:
-    DATABASE_PATH = 'phishing_detection.db'
+DATABASE_PATH = os.environ.get("DATABASE_PATH")
+if not DATABASE_PATH:
+    if os.environ.get("VERCEL") == "1":
+        DATABASE_PATH = '/tmp/phishing_detection.db'
+    else:
+        DATABASE_PATH = 'phishing_detection.db'
 
 
 class EmailService:
